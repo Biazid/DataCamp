@@ -162,4 +162,91 @@ DROP column firstname;
 alter table affiliations
 DROP column lastname;
 
+--Given the current state of your database, what happens if you execute the following SQL statement?
+--DELETE FROM universities WHERE id = 'EPF';
+--Ans: It fails because referential integrity from professors to universities is violated.
+
+--Change the referential integrity behavior of a key
+--Have a look at the existing foreign key constraints by querying table_constraints in information_schema.
+-- Identify the correct constraint name
+SELECT constraint_name, table_name, constraint_type
+FROM information_schema.table_constraints
+WHERE constraint_type = 'FOREIGN KEY';
+--Delete the affiliations_organization_id_fkey foreign key constraint in affiliations.
+-- Drop the right foreign key constraint
+ALTER table affiliations
+Drop CONSTRAINT affiliations_organization_id_fkey;
+--Add a new foreign key to affiliations that CASCADEs deletion if a referenced record is deleted from organizations. Name it affiliations_organization_id_fkey.
+-- Add a new foreign key constraint from affiliations to organizations which cascades deletion
+ALTER TABLE affiliations
+ADD CONSTRAINT affiliations_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES organizations (id) ON DELETE CASCADE;
+--Run the DELETE and SELECT queries to double check that the deletion cascade actually works.
+-- Check that no more affiliations with this organization exist
+SELECT * FROM affiliations
+WHERE organization_id = 'CUREM';
+
+--Count affiliations per university
+--Count the number of total affiliations by university.
+--Sort the result by that count, in descending order.
+-- Count the total number of affiliations per university
+SELECT count(*), professors.university_id 
+FROM affiliations
+JOIN professors
+ON affiliations.professor_id = professors.id
+-- Group by the university ids of professors
+GROUP BY professors.university_id 
+order by count DESC;
+--Join all tables in the database (starting with affiliations, professors, organizations, and universities) and look at the result.
+-- Join all tables
+SELECT *
+FROM affiliations
+JOIN professors
+ON affiliations.professor_id = professors.id
+JOIN organizations
+ON affiliations.organization_id = organizations.id
+JOIN universities
+ON professors.university_id = universities.id;
+--Now group the result by organization sector, professor, and university city. Count the resulting number of rows.
+-- Group the table by organization sector, professor ID and university city
+SELECT count(*), organizations.organization_sector, 
+professors.id, universities.university_city
+FROM affiliations
+JOIN professors
+ON affiliations.professor_id = professors.id
+JOIN organizations
+ON affiliations.organization_id = organizations.id
+JOIN universities
+ON professors.university_id = universities.id
+GROUP BY organizations.organization_sector, 
+professors.id, universities.university_city;
+--Only retain rows with "Media & communication" as organization sector, and sort the table by count, in descending order.
+-- Filter the table and sort it
+SELECT COUNT(*), organizations.organization_sector, 
+professors.id, universities.university_city
+FROM affiliations
+JOIN professors
+ON affiliations.professor_id = professors.id
+JOIN organizations
+ON affiliations.organization_id = organizations.id
+JOIN universities
+ON professors.university_id = universities.id
+where organizations.organization_sector = 'Media & communication'
+GROUP BY organizations.organization_sector, 
+professors.id, universities.university_city
+order BY count DESC;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
