@@ -51,6 +51,64 @@ FROM Incidents
 WHERE Country IS NULL
 
 
+--                                                                  Chapter 2: Math Functions
+--Write a T-SQL query which will return the sum of the Quantity column as Total for each type of MixDesc.
+-- Write a query that returns an aggregation 
+select MixDesc, sum(quantity) total
+FROM Shipments
+-- Group by the relevant column
+group by MixDesc
+
+--     Create a query that returns the number of rows for each type of MixDesc.
+-- Count the number of rows by MixDesc
+SELECT MixDesc, count(MixDesc)
+FROM Shipments
+GROUP BY MixDesc
+
+--Which date function should you use?
+--Suppose you want to calculate the number of years between two different dates, DateOne and DateTwo. Which SQL statement would you use to perform that calculation?
+--Ans: SELECT DATEDIFF(YYYY, DateOne, DateTwo)
+
+--Write a query that returns the number of days between OrderDate and ShipDate.
+SELECT OrderDate, ShipDate, 
+       DateDiff(DD, OrderDate, ShipDate) AS Duration
+FROM Shipments
+
+--Write a query that returns the approximate delivery date as five days after the ShipDate.
+-- Return the DeliveryDate as 5 days after the ShipDate
+SELECT OrderDate, 
+       DATEADD(DD, 5, ShipDate) AS DeliveryDate
+FROM Shipments
+
+--Write a SQL query to round the values in the Cost column to the nearest whole number.
+-- Round Cost to the nearest dollar
+SELECT Cost, 
+       ROUND(Cost,0) AS RoundedCost
+FROM Shipments
+
+--Write a SQL query to truncate the values in the Cost column to the nearest whole number.
+-- Truncate cost to whole number
+SELECT Cost, 
+       ROUND(cost, 0,1) AS TruncateCost
+FROM Shipments
+
+--Write a query that converts all the negative values in the DeliveryWeight column to positive values.
+-- Return the absolute value of DeliveryWeight
+SELECT DeliveryWeight,
+       abs(DeliveryWeight) AS AbsoluteValue
+FROM Shipments
+
+--Write a query that calculates the square and square root of the WeightValue column.
+-- Return the square and square root of WeightValue
+SELECT WeightValue, 
+       square(WeightValue) AS WeightSquare, 
+       sqrt(WeightValue) AS WeightSqrt
+FROM Shipments
+
+--                                                      Chapter 3: Processing Data in SQL Server
+
+--
+
 
 
 
