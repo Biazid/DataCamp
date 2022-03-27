@@ -152,5 +152,11 @@ ON a.BloodPressure = b.MaxBloodPressure
 -- Join on Age
 AND a.Age = b.Age
 
---
+--Select all the T-SQL keywords used to create a Common table expression.
+
+DEALLOCATE
+OPEN
+AS
+WITH
+CTE
 
