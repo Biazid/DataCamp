@@ -154,9 +154,8 @@ AND a.Age = b.Age
 
 --Select all the T-SQL keywords used to create a Common table expression.
 
-DEALLOCATE
-OPEN
-AS
-WITH
-CTE
+--DEALLOCATE   OPEN   AS WITH   CTE
+Ans: AS, WITH
+
+
 
