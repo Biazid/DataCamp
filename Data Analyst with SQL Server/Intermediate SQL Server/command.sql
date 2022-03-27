@@ -182,3 +182,24 @@ FROM Kidney a
 join BloodPressure b
 on BloodPressure=MaxBloodPressure
 
+--             							Chapter 4
+
+--Write a T-SQL query that returns the sum of OrderPrice by creating partitions for each TerritoryName.
+
+SELECT OrderID, TerritoryName, 
+       -- Total price for each partition
+       sum(OrderPrice) 
+       -- Create the window and partitions
+       Over(Partition by TerritoryName) AS TotalPrice
+FROM Orders
+
+--Count the number of rows in each partition. Partition the table by TerritoryName.
+
+SELECT OrderID, TerritoryName, 
+       -- Number of rows per partition
+       count(TerritoryName) 
+       -- Create the window and partitions
+       over(partition by TerritoryName) AS TotalOrders
+FROM Orders
+
+--
