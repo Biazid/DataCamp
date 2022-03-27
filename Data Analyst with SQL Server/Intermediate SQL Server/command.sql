@@ -157,5 +157,28 @@ AND a.Age = b.Age
 --DEALLOCATE   OPEN   AS WITH   CTE
 Ans: AS, WITH
 
+--Create a CTE BloodGlucoseRandom that returns one column (MaxGlucose) which contains the maximum BloodGlucoseRandom in the table. 
+--Join the CTE to the main table (Kidney) on BloodGlucoseRandom and MaxGlucose.
+-- Specify the keyowrds to create the CTE
+With BloodGlucoseRandom (MaxGlucose) 
+As (SELECT MAX(BloodGlucoseRandom) AS MaxGlucose FROM Kidney)
 
+SELECT a.Age, b.MaxGlucose
+FROM Kidney a
+-- Join the CTE on blood glucose equal to max blood glucose
+JOIN BloodGlucoseRandom b
+on BloodGlucoseRandom=MaxGlucose
+
+--Create a CTE BloodPressure that returns one column (MaxBloodPressure) which contains the maximum BloodPressure in the table.
+--Join this CTE (using an alias b) to the main table (Kidney) to return information about patients with the maximum BloodPressure.
+
+-- Create the CTE
+WITH BloodPressure(MaxBloodPressure) 
+AS (select Max(BloodPressure) as MaxBloodPressure from kidney)
+
+SELECT *
+FROM Kidney a
+-- Join the CTE  
+join BloodPressure b
+on BloodPressure=MaxBloodPressure
 
