@@ -202,4 +202,88 @@ SELECT OrderID, TerritoryName,
        over(partition by TerritoryName) AS TotalOrders
 FROM Orders
 
---
+--Which of the following statements is incorrect regarding window queries?
+--Ans: The standard aggregations like SUM(), AVG(), and COUNT() require ORDER BY in the OVER() clause.
+
+--Write a T-SQL query that returns the first OrderDate by creating partitions for each TerritoryName.
+SELECT TerritoryName, OrderDate, 
+       -- Select the first value in each partition
+       First_Value(OrderDate) 
+       -- Create the partitions and arrange the rows
+       OVER(PARTITION BY TerritoryName order by OrderDate) AS FirstOrder
+FROM Orders
+
+--Write a T-SQL query that for each territory:
+--Shifts the values in OrderDate one row down. Call this column PreviousOrder.
+--Shifts the values in OrderDate one row up. Call this column NextOrder. You will need to PARTITION BY the territory
+
+SELECT TerritoryName, OrderDate, 
+       -- Specify the previous OrderDate in the window
+       LAG(OrderDate) 
+       -- Over the window, partition by territory & order by order date
+       Over(partition BY TerritoryName order BY OrderDate) AS PreviousOrder,
+       -- Specify the next OrderDate in the window
+       LEAD(OrderDate) 
+       -- Create the partitions and arrange the rows
+       Over(partition BY TerritoryName order BY OrderDate) AS NextOrder
+FROM Orders
+
+--Create the window, partition by TerritoryName and order by OrderDate to calculate a running total of OrderPrice.
+SELECT TerritoryName, OrderDate, orderprice,
+       -- Create a running total
+       sum(OrderPrice) 
+       -- Create the partitions and arrange the rows
+       over(partition by TerritoryName order by OrderDate) AS TerritoryTotal	  
+FROM Orders
+
+--Write a T-SQL query that assigns row numbers to all records partitioned by TerritoryName and ordered by OrderDate.
+SELECT TerritoryName, OrderDate, 
+       -- Assign a row number
+       row_number() 
+       -- Create the partitions and arrange the rows
+       OVER(PARTITION BY TerritoryName ORDER BY OrderDate) AS OrderCount
+FROM Orders
+
+--Create the window, partition by TerritoryName and order by OrderDate to calculate a running standard deviation of OrderPrice.
+SELECT OrderDate, TerritoryName, 
+       -- Calculate the standard deviation
+	stdev(orderprice)
+       OVER(PARTITION BY TerritoryName ORDER BY OrderDate) AS StdDevPrice	  
+FROM Orders
+
+--Create a CTE ModePrice that returns two columns (OrderPrice and UnitPriceFrequency).
+--Write a query that returns all rows in this CTE.
+
+-- Create a CTE Called ModePrice which contains two columns
+With ModePrice (OrderPrice, UnitPriceFrequency)
+as
+(
+	SELECT OrderPrice, 
+	ROW_NUMBER() 
+	OVER(PARTITION BY OrderPrice ORDER BY OrderPrice) AS
+		UnitPriceFrequency
+	FROM Orders 
+)
+-- Select everything from the CTE
+select * from ModePrice
+
+--Use the CTE ModePrice to return the value of OrderPrice with the highest row number.
+-- CTE from the previous exercise
+WITH ModePrice (OrderPrice, UnitPriceFrequency)
+AS
+(
+	SELECT OrderPrice,
+	ROW_NUMBER() 
+    OVER (PARTITION BY OrderPrice ORDER BY OrderPrice) AS UnitPriceFrequency
+	FROM Orders
+)
+
+-- Select the order price from the CTE
+SELECT OrderPrice AS ModeOrderPrice
+FROM ModePrice
+-- Select the maximum UnitPriceFrequency from the CTE
+WHERE UnitPriceFrequency IN (select max(UnitPriceFrequency) FROM ModePrice)
+
+
+
+
