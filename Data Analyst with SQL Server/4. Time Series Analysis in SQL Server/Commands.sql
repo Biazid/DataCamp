@@ -194,6 +194,126 @@ SELECT
 
 	--Working with calendar tables
 
+--Which of the following is not a benefit of using a calendar table?
+--Ans: Calendar tables can let you to perform actions you could not otherwise do in T-SQL.
+
+--Find the dates of all Tuesdays in December covering the calendar years 2008 through 2010.
+-- Find Tuesdays in December for calendar years 2008-2010
+SELECT
+	c.Date
+FROM dbo.calendar c
+WHERE
+	c.monthname = 'December'
+	AND c.DayName = 'Tuesday'
+	AND c.CalendarYear BETWEEN 2008 AND 2010
+ORDER BY
+	c.Date;
+	
+--Find the dates for fiscal week 29 of fiscal year 2019.
+-- Find fiscal week 29 of fiscal year 2019
+SELECT
+	c.Date
+FROM dbo.Calendar c
+WHERE
+    -- Instead of month, use the fiscal week
+	c.FiscalWeekOfYear = 29
+    -- Instead of calendar year, use fiscal year
+	AND c.FiscalYear = 2019
+ORDER BY
+	c.Date ASC;
+	
+-- 		Joining to a calendar table
+--Fill in the blanks to determine which dates had type 3 incidents during the third fiscal quarter of FY2019.
+SELECT
+	ir.IncidentDate,
+	c.FiscalDayOfYear,
+	c.FiscalWeekOfYear
+FROM dbo.IncidentRollup ir
+	INNER JOIN dbo.Calendar c
+		ON ir.IncidentDate = c.Date
+WHERE
+    -- Incident type 3
+	ir.IncidentTypeID = 3
+    -- Fiscal year 2019
+	AND c.FiscalYear = 2019
+    -- Fiscal quarter 3
+	AND c.FiscalQuarter = 3;
+	
+--Fill in the gaps in to determine type 4 incidents which happened on weekends in FY2019 after fiscal week 30.
+
+SELECT
+	ir.IncidentDate,
+	c.FiscalDayOfYear,
+	c.FiscalWeekOfYear
+FROM dbo.IncidentRollup ir
+	INNER JOIN dbo.Calendar c
+		ON ir.IncidentDate = c.Date
+WHERE
+    -- Incident type 4
+	ir.IncidentTypeID = 4
+    -- Fiscal year 2019
+	AND c.FiscalYear = 2019
+    -- Beyond fiscal week of year 30
+	AND c.FiscalWeekOfYear	 > 30
+    -- Only return weekends
+	AND c.IsWeekend	 = 1;
+
+
+--									Chapter 2: Converting to Dates and Times
+
+--Create dates from component parts in the calendar table: calendar year, calendar month, and the day of the month.
+-- Create dates from component parts on the calendar table
+SELECT TOP(10)
+	DATEFROMPARTS(c.CalendarYear, c.CalendarMonth, c.day) AS CalendarDate
+FROM dbo.Calendar c
+WHERE
+	c.CalendarYear = 2017
+ORDER BY
+	c.FiscalDayOfYear ASC;
+	
+--Create dates from the component parts of the calendar table. Use the calendar year, calendar month, and day of month.
+SELECT TOP(10)
+	c.CalendarQuarterName,
+	c.MonthName,
+	c.CalendarDayOfYear
+FROM dbo.Calendar c
+WHERE
+	-- Create dates from component parts
+	DATEFROMPARTS(c.calendaryear, c.calendarmonth, c.day) >= '2018-06-01'
+	AND c.DayName = 'Tuesday'
+ORDER BY
+	c.FiscalYear,
+	c.FiscalDayOfYear ASC;
+
+
+--	Build the date and time (using DATETIME2FROMPARTS()) that Neil and Buzz became the first people to land on the moon. 
+--Note the "2" in DATETIME2FROMPARTS(), meaning we want to build a DATETIME2 rather than a DATETIME.
+--Build the date and time (using DATETIMEFROMPARTS()) that Neil and Buzz took off from the moon. Note that this is for a DATETIME, not a DATETIME2.
+
+SELECT
+	-- Mark the date and time the lunar module touched down
+    -- Use 24-hour notation for hours, so e.g., 9 PM is 21
+	DATETIME2FROMPARTS(1969, 7, 20, 20, 17, 00, 000, 0) AS TheEagleHasLanded,
+	-- Mark the date and time the lunar module took back off
+    -- Use 24-hour notation for hours, so e.g., 9 PM is 21
+	DATETIMEFROMPARTS(1969, 7, 21, 18, 54, 00, 000) AS MoonDeparture;
+	
+--Build a DATETIMEOFFSET which represents the last millisecond before the Y2.038K problem hits. The offset should be UTC.
+--Build a DATETIMEOFFSET which represents the moment devices hit the Y2.038K issue in UTC time. 
+--Then use the AT TIME ZONE operator to convert this to Eastern Standard Time.
+SELECT
+	-- Fill in the millisecond PRIOR TO chaos
+	DATETIMEOFFSETFROMPARTS(2038, 1, 19, 3, 14, 07, 999, 0, 0, 3) AS LastMoment,
+    -- Fill in the date and time when we will experience the Y2.038K problem
+    -- Then convert to the Eastern Standard Time time zone
+	DATETIMEOFFSETFROMPARTS(2038,  1, 19, 3, 14, 08, 0, 0, 0, 3) AT TIME ZONE 'Eastern Standard Time' AS TimeForChaos;
+	
+	
+-- 		Translating date strings
+--
+
+
+
 
 
 
