@@ -98,12 +98,54 @@ SELECT
 RoundedToDay		RoundedToHour		RoundedToMinute
 2018-06-14 00:00:00	2018-06-14 16:00:00	2018-06-14 16:29:00
 
+
+--Fill in the appropriate function, CAST(), for each example. Using the aliases as a guide, fill in the appropriate variable for each example.
+DECLARE
+	@CubsWinWorldSeries DATETIME2(3) = '2016-11-03 00:30:29.245',
+	@OlderDateType DATETIME = '2016-11-03 00:30:29.245';
+
+SELECT
+	-- Fill in the missing function calls
+	CAST(@CubsWinWorldSeries AS DATE) AS CubsWinDateForm,
+	CAST(@CubsWinWorldSeries AS NVARCHAR(30)) AS CubsWinStringForm,
+	CAST(@OlderDateType AS DATE) AS OlderDateForm,
+	CAST(@OlderDateType AS NVARCHAR(30)) AS OlderStringForm;
+
+--For the inner function, turn the date the Cubs won the World Series into a DATE data type using the CAST() function.
+--For the outer function, reshape this date as an NVARCHAR(30) using the CAST() function.
+DECLARE
+	@CubsWinWorldSeries DATETIME2(3) = '2016-11-03 00:30:29.245';
+
+SELECT
+	CAST(CAST(@CubsWinWorldSeries AS DATE) AS NVARCHAR(30)) AS DateStringForm;
+
+
+--Use the CONVERT() function to translate the date the Cubs won the world series into the DATE and NVARCHAR(30) data types.
+--The functional form for CONVERT() is CONVERT(DataType, SomeValue).
+DECLARE
+	@CubsWinWorldSeries DATETIME2(3) = '2016-11-03 00:30:29.245';
+
+SELECT
+	CONVERT(DATE, @CubsWinWorldSeries) AS CubsWinDateForm,
+	CONVERT(NVARCHAR(30), @CubsWinWorldSeries) AS CubsWinStringForm;
+
+
+--Fill in the correct function call for conversion.
+--The UK date formats are 3 and 103, representing two-digit year (dmy) and four-digit year (dmyyyy), respectively.
+--The corresponding US date formats are 1 and 101.
+
+DECLARE
+	@CubsWinWorldSeries DATETIME2(3) = '2016-11-03 00:30:29.245';
+
+SELECT
+	CONVERT(NVARCHAR(30), @CubsWinWorldSeries, 0) AS DefaultForm,
+	CONVERT(NVARCHAR(30), @CubsWinWorldSeries, 3) AS UK_dmy,
+	CONVERT(NVARCHAR(30), @CubsWinWorldSeries, 1) AS US_mdy,
+	CONVERT(NVARCHAR(30), @CubsWinWorldSeries, 103) AS UK_dmyyyy,
+	CONVERT(NVARCHAR(30), @CubsWinWorldSeries, 101) AS US_mdyyyy;
+
+
 --
-
-
-
-
-
 
 
 
