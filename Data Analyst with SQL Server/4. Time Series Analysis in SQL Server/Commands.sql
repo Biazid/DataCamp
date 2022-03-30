@@ -310,11 +310,82 @@ SELECT
 	
 	
 -- 		Translating date strings
+--Cast the input string DateText in the dbo.Dates temp table to the DATE data type.
+--Cast the input string DateText in the dbo.Dates temp table to the DATETIME2(7) data type.
+SELECT
+	d.DateText AS String,
+	-- Cast as DATE
+	CAST(d.DateText AS DATE) AS StringAsDate,
+	-- Cast as DATETIME2(7)
+	CAST(d.DateText AS DATETIME2(7)) AS StringAsDateTime2
+FROM dbo.Dates d;
+
+--Use the CONVERT() function to translate DateText into a date data type. 
+--Then use the CONVERT() function to translate DateText into a DATETIME2(7) data type.
+SET LANGUAGE 'GERMAN'
+
+SELECT
+	d.DateText AS String,
+	-- Convert to DATE
+	Convert(DATE, d.DateText) AS StringAsDate,
+	-- Convert to DATETIME2(7)
+	Convert(DATETIME2(7), d.DateText) AS StringAsDateTime2
+FROM dbo.Dates d;
+
+--Parse DateText as dates using the German locale (de-de).
+--Then, parse DateText as the data type DATETIME2(7), still using the German locale.
+SELECT
+	d.DateText AS String,
+	-- Parse as DATE using German
+	Parse(d.DateText AS DATE USING 'de-de') AS StringAsDate,
+	-- Parse as DATETIME2(7) using German
+	Parse(d.DateText AS DATETIME2(7) USING 'de-de') AS StringAsDateTime2
+FROM dbo.Dates d;
+
+--		Working with offsets
+
+--Fill in the appropriate function call for Brasilia, Brazil.
+--Fill in the appropriate function call and time zone for Chicago, Illinois. In August, Chicago is 2 hours behind Brasilia Standard Time.
+--Fill in the appropriate function call and time zone for New Delhi, India. India does not observe Daylight Savings Time, so in August, 
+--New Delhi is 8 1/2 hours ahead of Brasilia Standard Time. Note when calculating time zones that Brasilia and New Delhi are on opposite sides of UTC.
+DECLARE
+	@OlympicsUTC NVARCHAR(50) = N'2016-08-08 23:00:00';
+SELECT
+	-- Fill in the time zone for Brasilia, Brazil
+	SWITCHOFFSET(@OlympicsUTC, '-03:00') AS BrasiliaTime,
+	-- Fill in the time zone for Chicago, Illinois
+	SWITCHOFFSET(@OlympicsUTC, '-05:00') AS ChicagoTime,
+	-- Fill in the time zone for New Delhi, India
+	SWITCHOFFSET(@OlympicsUTC, '+05:30') AS NewDelhiTime;
+
+--Create a valid SQL query by dragging and dropping the items into the correct sequence.
+
+--Fill in the time in Phoenix, Arizona, which, being Mountain Standard Time, was UTC -07:00.
+--Fill in the time for Tuvalu, which is 12 hours ahead of UTC.
+DECLARE
+	@OlympicsClosingUTC DATETIME2(0) = '2016-08-21 23:00:00';
+SELECT
+	-- Fill in 7 hours back and a '-07:00' offset
+	TODATETIMEOFFSET(DATEADD(HOUR,-7, @OlympicsClosingUTC), '-07:00') AS PhoenixTime,
+	-- Fill in 12 hours forward and a '+12:00' offset.
+	TODATETIMEOFFSET(DATEADD(HOUR,+12, @OlympicsClosingUTC), '+12:00') AS TuvaluTime;
+	
+--		Handling invalid dates
+--Starting with the TRY_CONVERT() function, fill in the function name and input parameter for each example.
+DECLARE
+	@GoodDateINTL NVARCHAR(30) = '2019-03-01 18:23:27.920',
+	@GoodDateDE NVARCHAR(30) = '13.4.2019',
+	@GoodDateUS NVARCHAR(30) = '4/13/2019',
+	@BadDate NVARCHAR(30) = N'SOME BAD DATE';
+SELECT
+	-- Fill in the correct data type based on our input
+	TRY_CONVERT(DATETIME2(3), @GoodDateINTL) AS GoodDateINTL,
+	-- Fill in the correct function
+	TRY_CONVERT(DATE, @GoodDateDE) AS GoodDateDE,
+	TRY_CONVERT(DATE, @GoodDateUS) AS GoodDateUS,
+	-- Fill in the correct input parameter for BadDate
+	TRY_CONVERT(DATETIME2(3), @BadDate) AS BadDate;
+	
 --
-
-
-
-
-
 
 
