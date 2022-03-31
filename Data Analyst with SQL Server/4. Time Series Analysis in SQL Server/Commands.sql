@@ -386,6 +386,51 @@ SELECT
 	-- Fill in the correct input parameter for BadDate
 	TRY_CONVERT(DATETIME2(3), @BadDate) AS BadDate;
 	
---
+--Fill in the correct conversion function based on its parameter signature.
+--Note the amount of time returned in the DATEDIFF() call.
+--Do not use @StartTimeCast or @EndTimeCast in your answer; these are for calculating execution time.
 
+-- Try out how fast the TRY_CAST() function is
+-- by try-casting each DateText value to DATE
+DECLARE @StartTimeCast DATETIME2(7) = SYSUTCDATETIME();
+SELECT TRY_CAST(DateText as DATE) AS TestDate FROM #DateText;
+DECLARE @EndTimeCast DATETIME2(7) = SYSUTCDATETIME();
+-- Determine how much time the conversion took by
+-- calculating the date difference from @StartTimeCast to @EndTimeCast
+SELECT
+    DATEDIFF(MILLISECOND, @StartTimeCast, @EndTimeCast) AS ExecutionTimeCast;
+    
+ --Fill in the correct conversion function based on its parameter signature.
+--Note the amount of time returned in the DATEDIFF() call.
+--Do not use @StartTimeCast or @EndTimeCast in your answer; these are for calculating execution time.
+-- Try out how fast the TRY_CONVERT() function is
+-- by try-converting each DateText value to DATE
+DECLARE @StartTimeConvert DATETIME2(7) = SYSUTCDATETIME();
+SELECT TRY_CONVERT(DATE, DateText) AS TestDate FROM #DateText;
+DECLARE @EndTimeConvert DATETIME2(7) = SYSUTCDATETIME();
+--Ans: 8
 
+-- Determine how much time the conversion took by
+-- calculating the difference from start time to end time
+SELECT
+    DATEDIFF(MILLISECOND, @StartTimeConvert, @EndTimeConvert) AS ExecutionTimeConvert;
+--Ans: 8
+
+--  		Fill in the correct conversion function based on its parameter signature.
+--Note the amount of time returned in the DATEDIFF() call.
+--Do not use @StartTimeCast or @EndTimeCast in your answer; these are for calculating execution time.
+
+-- Try out how fast the TRY_PARSE() function is
+-- by try-parsing each DateText value to DATE
+DECLARE @StartTimeParse DATETIME2(7) = SYSUTCDATETIME();
+SELECT TRY_PARSE(DateText as DATE) AS TestDate FROM #DateText;
+DECLARE @EndTimeParse DATETIME2(7) = SYSUTCDATETIME();
+
+-- Determine how much time the conversion took by
+-- calculating the difference from start time to end time
+SELECT
+    DATEDIFF(MILLISECOND, @StartTimeParse, @EndTimeParse) AS ExecutionTimeParse;
+-- Ans: 646    
+    
+--	    Based on what you have learned so far, how would you compare the performance of TRY_PARSE() versus TRY_CAST() and TRY_CONVERT()?
+--	Ans:TRY_CAST() and TRY_CONVERT() are both faster than TRY_PARSE().
