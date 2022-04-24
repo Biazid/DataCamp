@@ -112,6 +112,76 @@ SELECT company_original.name, title, rank
  ORDER BY rank; 
  
  
+--Effects of casting
+--Select profits_change and profits_change cast as integer from fortune500.
+--Look at how the values were converted.
+-- Select the original value
+SELECT profits_change, 
+	   -- Cast profits_change
+       CAST(profits_change as integer) AS profits_change_int
+  FROM fortune500;
+
+--Compare the results of casting of dividing the integer value 10 by 3 to the result of dividing the numeric value 10 by 3.
+-- Divide 10 by 3
+SELECT 10/3, 
+       -- Cast 10 as numeric and divide by 3
+       10::numeric  /3;
+    
+--Now cast numbers that appear as text as numeric. Note: 1e3 is scientific notation.
+SELECT '3.2'::numeric,
+       '-123'::numeric,
+       '1e3'::numeric,
+       '1e-3'::numeric,
+       '02314'::numeric,
+       '0002'::numeric;
+       
+--Summarize the distribution of numeric values
+--Use GROUP BY and count() to examine the values of revenues_change.
+--Order the results by revenues_change to see the distribution.
+-- Select the count of each value of revenues_change
+SELECT revenues_change,count(revenues_change)
+  FROM fortune500
+Group by revenues_change
+ -- order by the values of revenues_change
+ ORDER BY revenues_change;
+ 
+--Repeat step 1, but this time, cast revenues_change as an integer to reduce the number of different values.
+-- Select the count of each revenues_change integer value
+SELECT revenues_change::integer, count(revenues_change)
+  FROM fortune500
+ group by  revenues_change::integer
+ -- order by the values of revenues_change
+ ORDER BY revenues_change;
+ 
+ --How many of the Fortune 500 companies had revenues increase in 2017 compared to 2016? 
+ --To find out, count the rows of fortune500 where revenues_change indicates an increase.
+ -- Count rows 
+SELECT count(*)
+  FROM fortune500
+ -- Where...
+ WHERE revenues_change > 0;
+ 
+ 
+ 
+ 
+ --							Chapter 2: Summarizing and aggregating numeric data
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
