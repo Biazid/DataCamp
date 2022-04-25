@@ -168,12 +168,147 @@ SELECT count(*)
 
 
 
+--Compute revenue per employee by dividing revenues by employees; use casting to produce a numeric result.
+--Take the average of revenue per employee with avg(); alias this as avg_rev_employee.
+--Group by sector.
+--Order by the average revenue per employee.
+-- Select average revenue per employee by sector
+SELECT sector, 
+       avg(revenues/employees::numeric) AS avg_rev_employee
+  FROM fortune500
+ GROUP BY sector
+ -- Use the column alias to order the results
+ ORDER BY avg_rev_employee;
+ 
+ --Exclude rows where question_count is 0 to avoid a divide by zero error.
+--Limit the result to 10 rows.
+-- Divide unanswered_count by question_count
+SELECT unanswered_count/question_count::numeric AS computed_pct, 
+       -- What are you comparing the above quantity to?
+       unanswered_pct
+  FROM stackoverflow
+ -- Select rows where question_count is not 0
+ WHERE question_count<>0
+ LIMIT 10;
+ 
+ 
+ 	--Summarize numeric columns
+--Compute the min(), avg(), max(), and stddev() of profits.
+-- Select min, avg, max, and stddev of fortune500 profits
+SELECT min(profits),
+       avg(profits),
+       max(profits),
+       stddev(profits)
+  FROM fortune500;
+  
+--Now repeat step 1, but summarize profits by sector.
+--Order the results by the average profits for each sector.
+-- Select sector and summary measures of fortune500 profits
+SELECT sector,
+       min(profits),
+       avg(profits),
+       max(profits),
+       stddev(profits)
+  FROM fortune500
+ -- What to group by?
+ GROUP BY sector
+ -- Order by the average profits
+ ORDER BY avg;
+ 
+ --		Summarize group statistics
+--Start by writing a subquery to compute the max() of question_count per tag; alias the subquery result as maxval.
+--Then compute the standard deviation of maxval with stddev().
+--Compute the min(), max(), and avg() of maxval too.
+-- Compute standard deviation of maximum values
+SELECT stddev(maxval),
+	   -- min
+       min(maxval),
+       -- max
+       max(maxval),
+       -- avg
+       avg(maxval)
+  -- Subquery to compute max of question_count by tag
+  FROM (SELECT max(question_count) AS maxval
+          FROM stackoverflow
+         -- Compute max by...
+         GROUP BY tag) AS max_results; -- alias for subquery
+	 
+--		Truncate
+--Use trunc() to truncate employees to the 100,000s (5 zeros).
+--Count the number of observations with each truncated value.
+-- Truncate employees
+SELECT trunc(employees, -5) AS employee_bin,
+       -- Count number of companies with each truncated value
+       count(title)
+  FROM fortune500
+ -- Use alias to group
+ GROUP BY employee_bin
+ -- Use alias to order
+ ORDER BY employee_bin;
+ 
+ --Repeat step 1 for companies with < 100,000 employees (most common). This time, truncate employees to the 10,000s place.
+-- Truncate employees
+SELECT trunc(employees, -4) AS employee_bin,
+       -- Count number of companies with each truncated value
+       count(title)
+  FROM fortune500
+ -- Limit to which companies?
+ WHERE employees< 100000
+ -- Use alias to group
+ GROUP BY employee_bin
+ -- Use alias to order
+ ORDER BY employee_bin;
+ 
+ ---		Generate series
+--Start by selecting the minimum and maximum of the question_count column for the tag 'dropbox' so you know the range of values to cover with the bins.
+-- Select the min and max of question_count
+SELECT min(question_count), 
+       max(question_count)
+  -- From what table?
+  FROM stackoverflow
+ -- For tag dropbox
+ where tag = 'dropbox';
+ 
+ --Next, use generate_series() to create bins of size 50 from 2200 to 3100.
 
+--To do this, you need an upper and lower bound to define a bin.
 
+--This will require you to modify the stopping value of the lower bound and the starting value of the upper bound by the bin width.
 
+-- Create lower and upper bounds of bins
+SELECT generate_series(2200, 3050, 50) AS lower,
+       generate_series(2250, 3100, 50) AS upper;
+       
+-- Select lower and upper from bins, along with the count of values within each bin bounds.
+--To do this, you'll need to join 'dropbox', which contains the question_count for tag "dropbox", to the bins created by generate_series().
+--The join should occur where the count is greater than or equal to the lower bound, and str--ctly less than the upper bound.
 
-
-
+-- Bins created in Step 2
+WITH bins AS (
+      SELECT generate_series(2200, 3050, 50) AS lower,
+             generate_series(2250, 3100, 50) AS upper),
+     -- Subset stackoverflow to just tag dropbox (Step 1)
+     dropbox AS (
+      SELECT question_count 
+        FROM stackoverflow
+       WHERE tag='dropbox') 
+-- Select columns for result
+-- What column are you counting to summarize?
+SELECT lower, upper, count(question_count) 
+  FROM bins  -- Created above
+       -- Join to dropbox (created above), 
+       -- keeping all rows from the bins table in the join
+       LEFT JOIN dropbox
+       -- Compare question_count to lower and upper
+         ON question_count >= lower 
+        AND question_count < upper
+ -- Group by lower and upper to count values in each bin
+ GROUP BY lower, upper
+ -- Order by lower to put bins in order
+ ORDER BY lower;
+ 
+ 
+ --		
 
 
 
