@@ -499,7 +499,47 @@ SELECT measure,
 ---						Chapter 3: 
 
 
+--	Count the categories
+--How many rows does each priority level have?
+-- Select the count of each level of priority
+SELECT priority, count(*)
+  from evanston311
+ group by priority;
+ 
+ --How many distinct values of zip appear in at least 100 rows?
+-- Find values of zip that appear in at least 100 rows
+-- Also get the count of each value
+SELECT zip, count(*)
+  FROM evanston311
+ GROUP BY zip
+HAVING count(*)>=100; 
 
+--How many distinct values of source appear in at least 100 rows?
+-- Find values of source that appear in at least 100 rows
+-- Also get the count of each value
+SELECT source, count(*)
+  FROM evanston311
+  GROUP BY source
+  HAVING Count(*)>=100
+  
+  --Select the five most common values of street and the count of each.
+
+-- Find the 5 most common values of street and the count of each
+SELECT street, count(*)
+  FROM evanston311
+ Group by street
+ Order by count(*) desc
+ limit 5
+ 
+ 
+ --	Spotting character data problems
+ 
+ --Explore the distinct values of the street column. Select each street value and the count of the number of rows with that value. 
+ --Sort the results by street to see similar values near each other.
+--Which of the following is NOT an issue you see with the values of street?
+--Ans: 	There are sometimes extra spaces at the beginning and end of values
+
+	--
 
 
 
