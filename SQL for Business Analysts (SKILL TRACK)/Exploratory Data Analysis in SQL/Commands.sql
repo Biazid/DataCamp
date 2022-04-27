@@ -623,8 +623,42 @@ SELECT CASE WHEN length(description) > 50
  WHERE description LIKE 'I %'
  ORDER BY description;
  
- 		--
+ 		--Create an "other" category
+/*If we want to summarize Evanston 311 requests by zip code, it would be useful to group all of the low frequency zip codes together in an "other" category.
 
+Which of the following values, when substituted for ??? in the query, would give the result below?
 
+Query:
+
+SELECT CASE WHEN zipcount < ??? THEN 'other'
+       ELSE zip
+       END AS zip_recoded,
+       sum(zipcount) AS zipsum
+  FROM (SELECT zip, count(*) AS zipcount
+          FROM evanston311
+         GROUP BY zip) AS fullcounts
+ GROUP BY zip_recoded
+ ORDER BY zipsum DESC;
+Result:
+
+zip_recoded    zipsum
+60201          19054
+60202          11165
+null           5528
+other          429
+60208          255
+*/
+--Ans: 100
+	
+		--Group and recode values
+/*There are almost 150 distinct values of evanston311.category. But some of these categories are similar, with the form "Main Category - Details". 
+We can get a better sense of what requests are common if we aggregate by the main category.
+To do this, create a temporary table recode mapping distinct category values to new, standardized values. 
+Make the standardized values the part of the category before a dash ('-'). Extract this value with the split_part() function:
+split_part(string text, delimiter text, field int)
+You'll also need to do some additional cleanup of a few cases that don't fit this pattern.
+Then the evanston311 table can be joined to recode to group requests by the new standardized category values.
+*/
+--Create recode with a standardized column; use split_part() and then rtrim() to remove any remaining whitespace on the result of split_part().
 
 
