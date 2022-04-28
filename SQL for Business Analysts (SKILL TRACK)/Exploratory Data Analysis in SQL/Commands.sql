@@ -784,6 +784,7 @@ SELECT *
   --Join the indicators table to evanston311, selecting the proportion of reports including an email or phone grouped by priority.
 --Include adjustments to account for issues arising from integer division.
 -- To clear table if it already exists
+-- To clear table if it already exists
 DROP TABLE IF EXISTS indicators;
 -- Create the temp table
 CREATE TEMP TABLE indicators AS
@@ -800,8 +801,10 @@ SELECT priority,
   FROM evanston311
        LEFT JOIN indicators
        -- Joining condition
-       ON indicators.id=evanston311.id
+       ON evanston311.id=indicators.id
  -- What are you grouping by?
  GROUP BY priority;
+ 
+ 
  
  
