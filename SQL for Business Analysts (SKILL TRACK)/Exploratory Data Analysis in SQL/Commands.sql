@@ -894,8 +894,66 @@ Group By category
 -- Order the results
  Order by completion_time desc;
  
- --		
-  
+ 	--4.2	Date parts
+	--How many requests are created in each of the 12 months during 2016-2017?
+
+
+/*The date_part() function is useful when you want to aggregate data by a unit of time across multiple larger units of time. For example, 
+aggregating data by month across different years, or aggregating by hour across different days.
+Recall that you use date_part() as:
+
+SELECT date_part('field', timestamp);
+
+In this exercise, you'll use date_part() to gain insights about when Evanston 311 requests are submitted and completed.
+*/
+--  How many requests are created in each of the 12 months during 2016-2017?
+-- Extract the month from date_created and count requests
+SELECT date_part('month',date_created) AS month, 
+       count(*)
+  FROM evanston311
+ -- Limit the date range
+ WHERE date_created >= '2016-01-01'
+   AND date_created < '2018-01-01'
+ -- Group by what to get monthly counts?
+ GROUP BY month;
+ 
+--What is the most common hour of the day for requests to be created?
+-- Get the hour and count requests
+SELECT date_part('hour',date_created) AS hour,
+       count(*)
+  FROM evanston311
+ GROUP BY hour
+ -- Order results to select most common
+ ORDER BY count desc
+ LIMIT 1;
+ 
+ --During what hours are requests usually completed? Count requests completed by hour. Order the results by hour.
+-- Count requests completed by hour
+SELECT date_part('hour',date_completed) AS hour,
+       Count(*)
+  FROM evanston311
+group by hour
+ order by hour ;
+ 
+ 
+ 		--Variation by day of week
+/*
+Does the time required to complete a request vary by the day of the week on which the request was created?
+We can get the name of the day of the week by converting a timestamp to character data:
+
+to_char(date_created, 'day') 
+
+But character names for the days of the week sort in alphabetical, not chronological, order. To get the chronological order of days of the week with an integer 
+value for each day, we can use:
+
+EXTRACT(DOW FROM date_created)
+
+DOW stands for "day of week."
+*/
+--Select the name of the day of the week the request was created (date_created) as day.
+--Select the mean time between the request completion (date_completed) and request creation as duration.
+--Group by day (the name of the day of the week) and the integer value for the day of the week (use a function).
+--Order by the integer value of the day of the week using the same function used in GROUP BY.
   
   
   
