@@ -805,6 +805,11 @@ SELECT priority,
  -- What are you grouping by?
  GROUP BY priority;
  
+ 						--	Chapter 4: Working with dates and timestamps
+
  
- 
+ --Which date format below conforms to the ISO 8601 standard?
+--Ans: 2018-06-15 15:30:00
+
+
  
