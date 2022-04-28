@@ -884,8 +884,17 @@ SELECT now(), now()+'5 minutes'::interval;
 The difference between these tells us how long a request was open.
 Which category of Evanston 311 requests takes the longest to complete?  
 */  
-  
-  
+--Compute the average difference between the completion timestamp and the creation timestamp by category.
+--Order the results with the largest average time to complete the request first.  
+-- Select the category and the average completion time by category
+SELECT category, 
+       avg(date_completed-date_created) AS completion_time
+  FROM evanston311
+Group By category
+-- Order the results
+ Order by completion_time desc;
+ 
+ --		
   
   
   
