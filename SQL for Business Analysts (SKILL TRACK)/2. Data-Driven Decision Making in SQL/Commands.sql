@@ -333,12 +333,67 @@ GROUP BY gender;
 
     --1-- Augment the table renting with customer information and information about the movies.
 --For each join use the first letter of the table name as alias.
+SELECT *
+FROM renting AS r
+LEFT JOIN customers c   -- Add customer information
+on r.customer_id=c.customer_id
+LEFT JOIN movies m   -- Add movie information
+on m.movie_id=r.movie_id;
+
+--2--Select only those records of customers born in the 70s.
+SELECT *
+FROM renting AS r
+LEFT JOIN customers AS c
+ON c.customer_id = r.customer_id
+LEFT JOIN movies AS m
+ON m.movie_id = r.movie_id
+where c.date_of_birth between '1970-01-01' and '1979-12-31'; -- Select customers born in the 70s
+
+--3--For each movie, report the number of times it was rented, as well as the average rating. Limit your results to customers born in the 1970s.
+
+SELECT m.title, 
+    count(*), -- Report number of views per movie
+    avg(r.rating) -- Report the average rating per movie
+FROM renting AS r
+LEFT JOIN customers AS c
+ON c.customer_id = r.customer_id
+LEFT JOIN movies AS m
+ON m.movie_id = r.movie_id
+WHERE c.date_of_birth BETWEEN '1970-01-01' AND '1979-12-31'
+group by m.title;
+
+--4--Remove those movies from the table with only one rental.
+--Order the result table such that movies with highest rating come first.
+SELECT m.title, 
+COUNT(*),
+AVG(r.rating) 
+FROM renting AS r
+LEFT JOIN customers AS c
+ON c.customer_id = r.customer_id
+LEFT JOIN movies AS m
+ON m.movie_id = r.movie_id
+WHERE c.date_of_birth BETWEEN '1970-01-01' AND '1979-12-31'
+GROUP BY m.title
+HAVING COUNT(*) > 1  -- Remove movies with only one rental
+ORDER BY AVG(r.rating) DESC; -- Order with highest rating first
 
 
+		--Identify favorite actors for Spain
 
+--You're now going to explore actor popularity in Spain. Use as alias the first letter of the table, except for the table actsin use ai instead.
+--1--Augment the table renting with information about customers and actors.
 
+SELECT *
+FROM renting as r 
+LEFT JOIN customers c  -- Augment table renting with information about customers 
+on r.customer_id=c.customer_id
+LEFT JOIN actsin act  -- Augment the table renting with the table actsin
+on act.movie_id=r.movie_id
+LEFT JOIN actors a  -- Augment table renting with information about actors
+on a.actor_id=act.actor_id
 
-
+--2--Report the number of movie rentals and the average rating for each actor, separately for male and female customers.
+--Report only actors with more than 5 movie rentals.
 
 
 
