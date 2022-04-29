@@ -69,7 +69,94 @@ FROM renting
 WHERE date_renting between '2018-01-01' and '2018-12-31'
 AND rating is not null; 
 
-        
+            --Summarizing customer information
+--In most business decisions customers are analyzed in groups, such as customers per country or customers per age group.
+--1 Count the number of customers born in the 80s.
+SELECT count(name) 
+FROM customers
+-- Select customers born between 1980-01-01 and 1989-12-31
+WHERE date_of_birth between '1980-01-01' and '1989-12-31'; 
+
+--2 Count the number of customers from Germany.
+SELECT count(*)   -- Count the total number of customers
+FROM customers
+where country='Germany'; -- Select all customers from Germany
+
+--3 Count the number of countries where MovieNow has customers.
+SELECT count(distinct country)   -- Count the number of countries
+FROM customers;
+
+                  --Ratings of movie 25
+--The movie ratings give us insight into the preferences of our customers. Report summary statistics, such as the minimum, maximum, average, and count,
+--of ratings for the movie with ID 25.
+
+--Select all movie rentals of the movie with movie_id 25 from the table renting.
+--For those records, calculate the minimum, maximum and average rating and count the number of ratings for this movie. 
+
+SELECT min(rating) min_rating, -- Calculate the minimum rating and use alias min_rating
+	   max(rating) max_rating, -- Calculate the maximum rating and use alias max_rating
+	   avg(rating) avg_rating, -- Calculate the average rating and use alias avg_rating
+	   count(rating) number_ratings -- Count the number of ratings and use alias number_ratings
+FROM renting
+where movie_id=25; -- Select all records of the movie with ID 25
+
+
+
+                          --Examining annual rentals
+--You are asked to provide a report about the development of the company. Specifically, your manager is interested in the total number of movie rentals,
+--the total number of ratings and the average rating of all movies since the beginning of 2019.
+
+--First, select all records of movie rentals since January 1st 2019.
+select *
+from renting
+where date_renting >= '2019-01-01'
+
+--Now, count the number of movie rentals and calculate the average rating since the beginning of 2019.
+SELECT 
+	count(*), -- Count the total number of rented movies
+	avg(rating) -- Add the average rating
+FROM renting
+WHERE date_renting >= '2019-01-01';
+
+--Use as alias column names number_renting and average_rating respectively.
+SELECT 
+	COUNT(*) number_renting, -- Give it the column name number_renting
+	AVG(rating) average_rating  -- Give it the column name average_rating
+FROM renting
+WHERE date_renting >= '2019-01-01';
+
+--Finally, count how many ratings exist since 2019-01-01.
+SELECT 
+	COUNT(*) AS number_renting,
+	AVG(rating) AS average_rating, 
+    count(rating) AS number_ratings -- Add the total number of ratings here.
+FROM renting
+WHERE date_renting >= '2019-01-01';
+
+
+
+                                                               --Chapter2: Decision Making with simple SQL queries
+
+
+                --    First account for each country.
+
+--Conduct an analysis to see when the first customer accounts were created for each country.
+--Create a table with a row for each country and columns for the country name and the date when the first customer account was created.
+--Use the alias first_account for the column with the dates.
+--Order by date in ascending order.
+SELECT country, -- For each country report the earliest date when an account was created
+	min(date_account_start) AS first_account
+FROM customers
+GROUP BY country
+ORDER BY first_account desc;
+
+                --    Average movie ratings
+--For each movie the average rating, the number of ratings and the number of views has to be reported. Generate a table with meaningful column names.
+--Group the data in the table renting by movie_id and report the ID and the average rating.
+
+
+
+
 
 
 
