@@ -318,7 +318,21 @@ ORDER BY income_movie desc; -- Order the result by decreasing income
 --Give the subsequent SELECT statement the alias a.
 --Report for actors from the USA the year of birth of the oldest and the year of birth of the youngest actor and actress.
 
+SELECT gender, -- Report for male and female actors from the USA 
+       max(year_of_birth), -- The year of birth of the oldest actor
+       min(year_of_birth) -- The year of birth of the youngest actor
+FROM
+   (SELECT *-- Use a subsequen SELECT to get all information about actors from the USA
+   from actors
+   where nationality= 'USA') As a  -- Give the table the name a
+GROUP BY gender;
 
+
+		--Identify favorite movies for a group of customers
+--Which is the favorite movie on MovieNow? Answer this question for a specific group of customers: for all customers born in the 70s.
+
+    --1-- Augment the table renting with customer information and information about the movies.
+--For each join use the first letter of the table name as alias.
 
 
 
