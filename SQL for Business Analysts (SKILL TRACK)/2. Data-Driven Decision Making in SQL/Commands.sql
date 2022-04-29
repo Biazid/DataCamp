@@ -387,13 +387,101 @@ SELECT *
 FROM renting as r 
 LEFT JOIN customers c  -- Augment table renting with information about customers 
 on r.customer_id=c.customer_id
-LEFT JOIN actsin act  -- Augment the table renting with the table actsin
-on act.movie_id=r.movie_id
+LEFT JOIN actsin ai  -- Augment the table renting with the table actsin
+on ai.movie_id=r.movie_id
 LEFT JOIN actors a  -- Augment table renting with information about actors
 on a.actor_id=act.actor_id
 
 --2--Report the number of movie rentals and the average rating for each actor, separately for male and female customers.
 --Report only actors with more than 5 movie rentals.
+
+SELECT a.name,  c.gender,
+       COUNT(*) AS number_views, 
+       AVG(r.rating) AS avg_rating
+FROM renting as r
+LEFT JOIN customers AS c
+ON r.customer_id = c.customer_id
+LEFT JOIN actsin as ai
+ON r.movie_id = ai.movie_id
+LEFT JOIN actors as a
+ON ai.actor_id = a.actor_id
+GROUP BY a.name, c.gender -- For each actor, separately for male and female customers
+HAVING AVG(r.rating) IS NOT NULL 
+  AND COUNT(*) > 5 -- Report only actors with more than 5 movie rentals
+ORDER BY avg_rating DESC, number_views DESC;
+
+
+--3--Now, report the favorite actors only for customers from Spain.
+SELECT a.name,  c.gender,
+       COUNT(*) AS number_views, 
+       AVG(r.rating) AS avg_rating
+FROM renting as r
+LEFT JOIN customers AS c
+ON r.customer_id = c.customer_id
+LEFT JOIN actsin as ai
+ON r.movie_id = ai.movie_id
+LEFT JOIN actors as a
+ON ai.actor_id = a.actor_id
+Where c.country='Spain' -- Select only customers from Spain
+GROUP BY a.name, c.gender
+HAVING AVG(r.rating) IS NOT NULL 
+  AND COUNT(*) > 5 
+ORDER BY avg_rating DESC, number_views DESC;
+
+
+		--KPIs per country
+
+/*
+In chapter 1 you were asked to provide a report about the development of the company. This time you have to prepare a similar report with KPIs for each country 
+separately. Your manager is interested in the total number of movie rentals, the average rating of all movies and the total revenue for each country since the 
+beginning of 2019.
+*/
+--1--Augment the table renting with information about customers and movies.
+--Use as alias the first latter of the table name.
+--Select only records about rentals since beginning of 2019.
+
+SELECT *
+FROM renting r-- Augment the table renting with information about customers
+LEFT JOIN customers c
+on r.customer_id=c.customer_id
+LEFT JOIN movies m-- Augment the table renting with information about movies
+on m.movie_id=r.movie_id
+where date_renting>= '2019-01-01'; 
+
+--2--Calculate the number of movie rentals.
+--Calculate the average rating.
+--Calculate the revenue from movie rentals.
+--Report these KPIs for each country.
+
+SELECT 
+	distinct country ,                   -- For each country report
+	count(*) AS number_renting, -- The number of movie rentals
+	avg(rating) AS average_rating, -- The average rating
+	sum(renting_price) AS revenue         -- The revenue from movie rentals
+FROM renting AS r
+LEFT JOIN customers AS c
+ON c.customer_id = r.customer_id
+LEFT JOIN movies AS m
+ON m.movie_id = r.movie_id
+WHERE date_renting >= '2019-01-01'
+group by country;
+
+
+
+
+								--Chapter 3: Data Driven Decision Making with advanced SQL queries
+
+
+		--Often rented movies	
+
+--Your manager wants you to make a list of movies excluding those which are hardly ever watched. This list of movies will be used for advertising. 
+--List all movies with more than 5 views using a nested query which is a powerful tool to implement selection conditions.
+
+--1--Select all movie IDs which have more than 5 views.
+
+
+
+
 
 
 
