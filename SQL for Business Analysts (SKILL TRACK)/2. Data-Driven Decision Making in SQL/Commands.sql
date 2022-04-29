@@ -153,9 +153,53 @@ ORDER BY first_account desc;
                 --    Average movie ratings
 --For each movie the average rating, the number of ratings and the number of views has to be reported. Generate a table with meaningful column names.
 --Group the data in the table renting by movie_id and report the ID and the average rating.
+SELECT movie_id, 
+       avg(rating)    -- Calculate average rating per movie
+FROM renting
+Group by movie_id;
+
+--Add two columns for the number of ratings and the number of movie rentals to the results table.
+--Use alias names avg_rating, number_rating and number_renting for the corresponding columns.
+SELECT movie_id, 
+       AVG(rating) AS avg_rating, -- Use as alias avg_rating
+       count(rating) AS number_rating ,      -- Add column for number of ratings with alias number_rating
+       count(date_renting) AS number_renting      -- Add column for number of movie rentals with alias number_renting
+FROM renting
+GROUP BY movie_id;
+
+--Order the rows of the table by the average rating such that it is in decreasing order.
+--Observe what happens to NULL values.
+SELECT movie_id, 
+       AVG(rating) AS avg_rating,
+       COUNT(rating) AS number_ratings,
+       COUNT(*) AS number_renting
+FROM renting
+GROUP BY movie_id
+order by avg_rating desc; -- Order by average rating in decreasing order
 
 
+--Which statement is true for the movie with average rating null?
+--Ans: The average is null because all of the ratings of the movie are null.
+	
+	
+	
+			--Average rating per customer
 
+--Similar to what you just did, you will now look at the average movie ratings, this time for customers. So you will obtain a table with the average rating given 
+--by each customer. Further, you will include the number of ratings and the number of movie rentals per customer. You will report these summary statistics only for 
+--customers with more than 7 movie rentals and order them in ascending order by the average rating.
+
+--Group the data in the table renting by customer_id and report the customer_id, the average rating, the number of ratings and the number of movie rentals.
+--Select only customers with more than 7 movie rentals.
+--Order the resulting table by the average rating in ascending order.
+SELECT customer_id,  -- Report the customer_id
+       AVG(rating), -- Report the average rating per customer
+       COUNT(rating), -- Report the number of ratings per customer
+       COUNT(*) -- Report the number of movie rentals per customer
+FROM renting
+GROUP BY customer_id
+HAVING COUNT(*) > 7 -- Select only customers with more than 7 movie rentals
+ORDER BY AVG(rating); -- Order by the average rating in ascending order
 
 
 
