@@ -202,6 +202,131 @@ HAVING COUNT(*) > 7 -- Select only customers with more than 7 movie rentals
 ORDER BY AVG(rating); -- Order by the average rating in ascending order
 
 
+		--Join renting and customers
+--For many analyses it is necessary to add customer information to the data in the table renting.
+
+--1  Augment the table renting with all columns from the table customers with a LEFT JOIN.
+--Use as alias' for the tables r and c respectively.
+SELECT * -- Join renting with customers
+FROM renting
+LEFT JOIN customers
+ON renting.customer_id=customers.customer_id;
+
+--2  Select only records from customers coming from Belgium.
+
+SELECT *
+FROM renting AS r
+LEFT JOIN customers AS c
+ON r.customer_id = c.customer_id
+Where c.country='Belgium'; 
+
+--3  Average ratings of customers from Belgium.
+
+SELECT avg(rating) -- Average ratings of customers from Belgium
+FROM renting AS r
+LEFT JOIN customers AS c
+ON r.customer_id = c.customer_id
+WHERE c.country='Belgium';
+
+
+		--Aggregating revenue, rentals and active customers
+
+--The management of MovieNow wants to report key performance indicators (KPIs) for the performance of the company in 2018. They are interested in measuring the
+--financial successes as well as user engagement. Important KPIs are, therefore, the profit coming from movie rentals, the number of movie rentals and the number 
+--of active customers.
+
+
+--1  First, you need to join movies on renting to include the renting_price from the movies table for each renting record.
+--Use as alias' for the tables m and r respectively.
+
+SELECT *
+FROM renting AS r
+Left JOIN movies AS m -- Choose the correct join statment
+ON r.movie_id=m.movie_id;
+
+--2	Calculate the revenue coming from movie rentals, the number of movie rentals and the number of customers who rented a movie.
+
+SELECT 
+	SUM(m.renting_price), -- Get the revenue from movie rentals
+	COUNT(*), -- Count the number of rentals
+	COUNT(DISTINCT r.customer_id) -- Count the number of customers
+FROM renting AS r
+LEFT JOIN movies AS m
+ON r.movie_id = m.movie_id;
+
+--3	Now, you can report these values for the year 2018. Calculate the revenue in 2018, the number of movie rentals and the number of active customers in 2018. 
+--An active customer is a customer who rented at least one movie in 2018.
+
+SELECT 
+	SUM(m.renting_price), 
+	COUNT(*), 
+	COUNT(DISTINCT r.customer_id)
+FROM renting AS r
+LEFT JOIN movies AS m
+ON r.movie_id = m.movie_id
+-- Only look at movie rentals in 2018
+WHERE date_renting between '2018-01-01' and '2018-12-31' ;
+
+	
+		--Movies and actors
+--You are asked to give an overview of which actors play in which movie.
+
+--Create a list of actor names and movie titles in which they act. Make sure that each combination of actor and movie appears only once.
+--Use as an alias for the table actsin the two letters ai.
+SELECT m.title, -- Create a list of movie titles and actor names
+       a.name
+FROM actsin at
+LEFT JOIN movies AS m
+ON m.movie_id = at.movie_id
+LEFT JOIN actors AS a
+ON a.actor_id = at.actor_id;
+
+		--Income from movies
+
+--How much income did each movie generate? To answer this question subsequent SELECT statements can be used.
+
+--1	Use a join to get the movie title and price for each movie rental.
+
+SELECT m.title, -- Use a join to get the movie title and price for each movie rental
+       m.renting_price
+FROM renting AS r
+LEFT JOIN movies AS m
+ON r.movie_id=m.movie_id;
+
+--2 	Report the total income for each movie.
+--Order the result by decreasing income.
+
+SELECT rm.title, -- Report the income from movie rentals for each movie 
+       sum(renting_price) AS income_movie
+FROM
+       (SELECT m.title,  
+               m.renting_price
+       FROM renting AS r
+       LEFT JOIN movies AS m
+       ON r.movie_id=m.movie_id) AS rm
+group by rm.title
+ORDER BY income_movie desc; -- Order the result by decreasing income
+
+--3	Which statement about the movie 'Django Unchained' is NOT correct?
+--Ans: The income from 'Django Unchained' is higher than from 'Simone'.
+
+
+		--Age of actors from the USA
+--Now you will explore the age of American actors and actresses. Report the date of birth of the oldest and youngest US actor and actress.
+
+--Create a subsequent SELECT statements in the FROM clause to get all information about actors from the USA.
+--Give the subsequent SELECT statement the alias a.
+--Report for actors from the USA the year of birth of the oldest and the year of birth of the youngest actor and actress.
+
+
+
+
+
+
+
+
+
+
 
 
 
