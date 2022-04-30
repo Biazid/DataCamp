@@ -479,10 +479,69 @@ group by country;
 
 --1--Select all movie IDs which have more than 5 views.
 
+SELECT movie_id, count(*) 
+FROM renting
+group by movie_id
+having count(*)>5
+
+--2--Select all information about movies with more than 5 views.
+
+SELECT *
+FROM movies
+where movie_id in
+	(SELECT movie_id
+	FROM renting
+	GROUP BY movie_id
+	HAVING COUNT(*) > 5)
+	
+	
+		--Frequent customers
+--Report a list of customers who frequently rent movies on MovieNow.
+
+--List all customer information for customers who rented more than 10 movies.
+
+SELECT *
+FROM customers
+WHERE customer_id IN 
+	(SELECT customer_id
+	FROM renting
+	GROUP BY customer_id
+	HAVING COUNT(*) > 10);
+	
+	
+		--Movies with rating above average
 
 
+--For the advertising campaign your manager also needs a list of popular movies with high ratings. Report a list of movies with rating above average.
+
+--1 Calculate the average over all ratings.
+select avg(rating)
+from renting
+
+--2 Select movie IDs and calculate the average rating of movies with rating above average.
+
+SELECT movie_id, -- Select movie IDs and calculate the average rating 
+       avg(rating)
+FROM renting
+group by movie_id
+having avg(rating) >        
+	(SELECT AVG(rating)
+	FROM renting);
 
 
+--3 The advertising team only wants a list of movie titles. Report the movie titles of all movies with average rating higher than the total average.
+
+SELECT title 
+WHERE movie_id in
+	(SELECT movie_id
+	 FROM renting
+     GROUP BY movie_id
+     HAVING AVG(rating) > 
+		(SELECT AVG(rating)
+		 FROM renting));
+		 	
+			
+			--
 
 
 
