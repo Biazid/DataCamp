@@ -619,10 +619,90 @@ WHERE 8 <
 
 
 
-				--
-				
-				
--- 
+				--Customers with at least one rating
+
+						
+-- Having active customers is a key performance indicator for MovieNow. Make a list of customers who gave at least one rating.
+
+--1  Select all records of movie rentals from customer with ID 115.
+select *
+from renting
+where customer_id=115;
+
+--2 Select all records of movie rentals from the customer with ID 115 and exclude records with null ratings.
+SELECT *
+FROM renting
+WHERE rating is not null 
+AND customer_id = 115;
+
+--3 Select all records of movie rentals from the customer with ID 1, excluding null ratings.
+SELECT *
+FROM renting
+WHERE rating is not null 
+and customer_id=1;
+
+--4 Select all customers with at least one rating. Use the first letter of the table as an alias.
+SELECT *
+FROM customers AS c 
+WHERE EXISTS
+	(SELECT *
+	FROM renting AS r
+	WHERE rating IS NOT NULL 
+	AND r.customer_id = c.customer_id);
+	
+	
+		--Actors in comedies
+
+--In order to analyze the diversity of actors in comedies, first, report a list of actors who play in comedies and then, the number of actors for each
+--nationality playing in comedies.
+
+--1 Select the records of all actors who play in a Comedy. Use the first letter of the table as an alias.
+SELECT *
+FROM actsin AS ai
+LEFT JOIN movies AS m
+on ai.movie_id=m.movie_id
+WHERE m.genre = 'Comedy';
+
+--2 Make a table of the records of actors who play in a Comedy and select only the actor with ID 1.
+SELECT *
+FROM actsin AS ai
+LEFT JOIN movies AS m
+ON m.movie_id = ai.movie_id
+WHERE m.genre = 'Comedy'
+AND ai.actor_id=1; 
+
+--3 Create a list of all actors who play in a Comedy. Use the first letter of the table as an alias.
+SELECT *
+FROM actors AS a
+WHERE EXISTS
+	(SELECT *
+	 FROM actsin AS ai
+	 LEFT JOIN movies AS m
+	 ON m.movie_id = ai.movie_id
+	 WHERE m.genre = 'Comedy'
+	 AND ai.actor_id = a.actor_id);
+
+--4 Report the nationality and the number of actors for each nationality.
+SELECT a.nationality, count(*)
+FROM actors AS a
+WHERE EXISTS
+	(SELECT ai.actor_id
+	 FROM actsin AS ai
+	 LEFT JOIN movies AS m
+	 ON m.movie_id = ai.movie_id
+	 WHERE m.genre = 'Comedy'
+	 AND ai.actor_id = a.actor_id)
+Group by a.nationality;
+
+		
+			
+			-- 
+
+
+
+
+
+
 
 
 
