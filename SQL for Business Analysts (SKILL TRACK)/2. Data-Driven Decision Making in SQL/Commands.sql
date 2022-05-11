@@ -696,7 +696,62 @@ Group by a.nationality;
 
 		
 			
-			-- 
+			-- Young actors not coming from the USA
+			
+--As you've just seen, the operators UNION and INTERSECT are powerful tools when you work with two or more tables. 
+--Identify actors who are not from the USA and actors who were born after 1990.
+
+--1 Report the name, nationality and the year of birth of all actors who are not from the USA.
+
+SELECT name,  -- Report the name, nationality and the year of birth
+       nationality, 
+       year_of_birth
+FROM actors
+where nationality<>'USA'; -- Of all actors who are not from the USA
+
+--2 Report the name, nationality and the year of birth of all actors who were born after 1990.
+
+SELECT name, 
+       nationality, 
+       year_of_birth
+FROM actors
+where year_of_birth>1990;
+
+--3 Select all actors who are not from the USA and all actors who are born after 1990.
+
+SELECT name, 
+       nationality, 
+       year_of_birth
+FROM actors
+WHERE nationality <> 'USA'
+UNION 
+SELECT name, 
+       nationality, 
+       year_of_birth
+FROM actors
+WHERE year_of_birth > 1990;
+
+--4 Select all actors who are not from the USA and who are also born after 1990.
+
+SELECT name, 
+       nationality, 
+       year_of_birth
+FROM actors
+WHERE nationality <> 'USA'
+INTERSECT 
+SELECT name, 
+       nationality, 
+       year_of_birth
+FROM actors
+WHERE year_of_birth > 1990;
+
+
+					--	Dramas with high ratings
+
+--The advertising team has a new focus. They want to draw the attention of the customers to dramas. 
+--Make a list of all movies that are in the drama genre and have an average rating higher than 9.
+
+
 
 
 
