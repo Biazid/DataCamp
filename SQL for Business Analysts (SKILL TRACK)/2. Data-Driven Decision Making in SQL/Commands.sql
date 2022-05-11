@@ -751,6 +751,51 @@ WHERE year_of_birth > 1990;
 --The advertising team has a new focus. They want to draw the attention of the customers to dramas. 
 --Make a list of all movies that are in the drama genre and have an average rating higher than 9.
 
+--1 Select the IDs of all dramas.
+
+SELECT movie_id 
+FROM movies
+where genre='Drama';
+
+--2 Select the IDs of all movies with average rating higher than 9.
+
+SELECT movie_id
+FROM renting
+GROUP BY movie_id
+having avg(rating)>9;
+
+--3 Select the IDs of all dramas with average rating higher than 9.
+
+SELECT movie_id
+FROM movies
+WHERE genre = 'Drama'
+INTERSECT  
+SELECT movie_id
+FROM renting
+GROUP BY movie_id
+HAVING AVG(rating)>9;
+
+--4 Select all movies of in the drama genre with an average rating higher than 9.
+
+SELECT *
+FROM movies
+where movie_id in
+   (SELECT movie_id
+    FROM movies
+    WHERE genre = 'Drama'
+    INTERSECT
+    SELECT movie_id
+    FROM renting
+    GROUP BY movie_id
+    HAVING AVG(rating)>9);
+    
+    
+	
+				--	Chapter 4: Data Driven Decision Making with OLAP SQL queries	--
+				--------------------------------------------------------------------------
+				
+				
+			--
 
 
 
