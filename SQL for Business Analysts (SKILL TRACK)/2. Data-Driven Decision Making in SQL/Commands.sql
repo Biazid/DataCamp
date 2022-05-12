@@ -809,7 +809,28 @@ FROM customers
 GROUP BY CUBE (gender, country)
 ORDER BY country;
 
+		--Categories of movies
+--Give an overview on the movies available on MovieNow. List the number of movies for different genres and release years.
 
+--1 List the number of movies for different genres and the year of release on all aggregation levels by using the CUBE operator.
+
+SELECT genre,
+       year_of_release,
+       count(*)
+FROM movies
+GROUP BY CUBE(genre, year_of_release)
+ORDER BY year_of_release;
+
+--2 Which statement is NOT correct about the result table?
+
+--Ans: The year of release with most movies is 2014.
+
+		
+		--Analyzing average ratings
+
+--Prepare a table for a report about the national preferences of the customers from MovieNow comparing the average rating of movies across countries and genres.
+
+--1 
 
 
 
