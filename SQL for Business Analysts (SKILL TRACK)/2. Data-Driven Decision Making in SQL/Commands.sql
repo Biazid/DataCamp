@@ -830,10 +830,47 @@ ORDER BY year_of_release;
 
 --Prepare a table for a report about the national preferences of the customers from MovieNow comparing the average rating of movies across countries and genres.
 
---1 
+--1 Augment the records of movie rentals with information about movies and customers, in this order. Use the first letter of the table names as alias.
+
+SELECT *
+FROM renting as r 
+LEFT JOIN movies as m 
+ON r.movie_id=m.movie_id
+LEFT JOIN customers as c 
+ON r.customer_id=c.customer_id;
 
 
+--2 Calculate the average rating for each country.
 
+SELECT 
+	c.country,
+    avg(r.rating)
+FROM renting AS r
+LEFT JOIN movies AS m
+ON m.movie_id = r.movie_id
+LEFT JOIN customers AS c
+ON r.customer_id = c.customer_id
+Group by c.country;
+
+
+--3 Calculate the average rating for all aggregation levels of country and genre.
+
+SELECT 
+	c.country, 
+	m.genre, 
+	AVG(r.rating) AS avg_rating -- Calculate the average rating 
+FROM renting AS r
+LEFT JOIN movies AS m
+ON m.movie_id = r.movie_id
+LEFT JOIN customers AS c
+ON r.customer_id = c.customer_id
+GROUP BY CUBE(c.country,m.genre);
+
+--4 What is the average rating over all records, rounded to two digits?
+--Ans: 7.94
+
+
+		--
 
 
 
