@@ -336,6 +336,75 @@ ORDER BY count DESC;
 							--Chapter 3: Manage Your Data
 
 
+				--Storing new data
+
+--You're planing to run a promotion on movies that won a best film academy award in the last 5 years. To do this you need to add a table in your database containing the movies which won an Oscar for best film.
+/*
+The data you need for this exercise is provided in the table below:
+
+	title		   award
+------------------------------------
+'TRANSLATION SUMMER'	'Best Film'
+'DORADO NOTTING'	'Best Film'
+'MARS ROMAN'		'Best Film'
+'CUPBOARD SINNERS'	'Best Film'
+'LONELY ELEPHANT'	'Best Film'
+*/
+
+--1 CREATE an empty new TABLE called oscars.
+--Store both columns (title and award) as the datatype VARCHAR.
+create table oscars (
+    title varchar,
+    award varchar
+);
+
+--2 INSERT the data from the table above into the newly created oscars table.
+
+INSERT INTO oscars (title, award)
+VALUES
+('TRANSLATION SUMMER', 'Best Film'),
+('DORADO NOTTING', 'Best Film'),
+('MARS ROMAN', 'Best Film'),
+('CUPBOARD SINNERS', 'Best Film'),
+('LONELY ELEPHANT', 'Best Film');
+
+--3 Confirm that your new table exists by running a SELECT query on it.
+SELECT * 
+FROM oscars;
+
+	
+				--Using existing data
+
+--You are interested in identifying and storing information about films that are family-friendly. To do this, you will create a new table family_films using 
+--the data from the film table. This new table will contain a subset of films that have either the rating G or PG.
+
+--1 Write a query to select all records & column from the film table which have a rating of G or PG.
+
+select * 
+from film
+where rating in ('G', 'PG')
+
+--2 Save the results of the query in a new table named family_films.
+Create table family_films as
+SELECT *
+FROM film
+WHERE rating IN ('G', 'PG');
+
+
+				--TABLE vs VIEW
+
+--Which of these statements are correct?
+/*
+1 The data in a newly created table will automatically refresh based on the query used to create it.
+
+2 The data in a newly created VIEW can be modified directly.
+
+3 To modify the data in a VIEW you need to change the data in the tables the VIEW relies on.
+
+4 To modify the data in a TABLE you need to change the underlying tables from the query used to create it.
+*/ --ans: 3
+
+				
 				--
 
 
