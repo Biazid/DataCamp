@@ -774,5 +774,71 @@ WHERE release_year BETWEEN 2005 AND 2010
 GROUP BY category;
 
 
+					--What are the don'ts of writing SQL code?
+
+/*
+Which of these practices should you avoid when writing SQL queries?
+
+1. Writing comments that are redundant with the code.
+
+2. Selecting every column in your query instead of only the ones you need.
+
+3. Using Loops in SQL.
+
+4. All of the above.   Ans
+*/
+
+				--Apply best practices to your code
+
+/*In this exercise you will update the code below to adhere to the best practices you learned in this chapter.
+
+SELECT first_name, last_name, email FROM rental AS r 
+-- FROM address AS a JOIN r.address_id = a.address_id
+JOIN customer AS c ON r.customer_id = c.customer_id;
+
+*/
+
+--1 
+/*
+What steps should you take here to adhere to the best practices you've learned in this chapter?
+
+Possible Answers
+
+1 Avoid the common mistake of leaving in commented out code by removing it.
+
+2 Make code easier to read by using new lines and indentation effectively.
+
+3 Convey your intent by specifying the type of JOIN.
+
+4 All of the above.        Ans
+
+*/
+
+--2 Avoid the common mistake of leaving in commented out code by removing it.
+
+SELECT first_name, last_name, email FROM rental AS r 
+JOIN customer AS c ON r.customer_id = c.customer_id;
+
+--3 Make code easier to read by using new lines and indentation effectively.
+
+SELECT first_name, 
+       last_name, 
+       email 
+FROM rental AS r 
+JOIN customer AS c 
+    ON r.customer_id = c.customer_id;
+    
+--4 Convey your intent by specifying the type of JOIN.
+
+SELECT first_name, 
+       last_name, 
+       email 
+FROM rental AS r 
+INNER JOIN customer AS c 
+   ON r.customer_id = c.customer_id;
+   
+   	
+
+
 
 
