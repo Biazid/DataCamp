@@ -338,7 +338,8 @@ ORDER BY count DESC;
 
 				--Storing new data
 
---You're planing to run a promotion on movies that won a best film academy award in the last 5 years. To do this you need to add a table in your database containing the movies which won an Oscar for best film.
+--You're planing to run a promotion on movies that won a best film academy award in the last 5 years. To do this you need to add a table in your database 
+--containing the movies which won an Oscar for best film.
 /*
 The data you need for this exercise is provided in the table below:
 
@@ -405,7 +406,78 @@ WHERE rating IN ('G', 'PG');
 */ --ans: 3
 
 				
-				--
+				--What should you modify?
+
+--When working with databases in a business setting, it is best to ensure that any modification you make to a database does not negatively impact any users or 
+--processes that depend on it.
+--With that in mind, which of these precautions should you take when modifying data?
+
+/*
+Possible Answers
+
+A) Ensure that you have access to modify the table.
+
+B) You can modify tables that you create whenever and however you want.
+
+C) Ensure the records you want to modify are the right ones by running a SELECT query first.
+
+D) A & C
+
+E) None of the above, its just data!
+
+Ans: D
+*/
+
+				--Update the price of rentals
+
+/*You just learned that there have been some updates for the rental pricing of your films. In this exercise you will leverage the 
+UPDATE command to modify the rental prices by increasing the rental_rate with the following logic.
+
+All films now cost 50 cents more to rent.
+R Rated films will go up by an additional 1 dollar.
+*/
+
+--1 	  UPDATE the film table to increase the cost of renting (rental_rate) by 50 cents.
+--        The rental_rate is shown in dollars.
+
+UPDATE film
+SET rental_rate = rental_rate+0.50;
+
+--2 UPDATE the film table to further increase the cost of renting (rental_rate) R-rated films by 1 dollar.
+
+update film
+set rental_rate= rental_rate+1
+where rating='R'
+
+				--Updated based on other tables
+
+
+/*The rental company is running a promotion and needs you to lower the rental costs by 1 dollar of films who star the actors/actresses with the following 
+last names: WILLIS, CHASE, WINSLET, GUINESS, HUDSON.
+To UPDATE this data in the film table you will need to identify the film_id for these actors.
+*/
+
+--Write a query to SELECT the film_id for the actors with the following 5 last names WILLIS, CHASE, WINSLET, GUINESS, HUDSON.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
