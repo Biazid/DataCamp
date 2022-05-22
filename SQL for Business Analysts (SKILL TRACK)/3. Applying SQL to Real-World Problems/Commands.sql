@@ -457,16 +457,89 @@ last names: WILLIS, CHASE, WINSLET, GUINESS, HUDSON.
 To UPDATE this data in the film table you will need to identify the film_id for these actors.
 */
 
---Write a query to SELECT the film_id for the actors with the following 5 last names WILLIS, CHASE, WINSLET, GUINESS, HUDSON.
+--1 Write a query to SELECT the film_id for the actors with the following 5 last names WILLIS, CHASE, WINSLET, GUINESS, HUDSON.
+
+SELECT film_id 
+FROM actor AS a
+INNER JOIN film_actor AS f
+   ON a.actor_id = f.actor_id
+WHERE last_name IN ('WILLIS', 'CHASE', 'WINSLET', 'GUINESS', 'HUDSON');
+
+--2 Use the query you created in the previous step to decrease the rental_rate by 1 dollar for all of the film_id that match.
+
+Update film
+set rental_rate= rental_rate-1
+where film_id in
+  (SELECT film_id from actor AS a
+   INNER JOIN film_actor AS f
+      ON a.actor_id = f.actor_id
+   WHERE last_name IN ('WILLIS', 'CHASE', 'WINSLET', 'GUINESS', 'HUDSON'));
+   
+   
+   			--Deleting all table data
+/*
+A) DROP TABLE film;
+
+B) TRUNCATE TABLE film;
+
+C) DELETE FROM film;
+
+Which of the statements about the above commands are TRUE?
+
+
+Possible Answers
+
+1. A & B remove all records from the film table.
+
+2. C removes the film table from the database.
+
+3. A & C remove all records from the film table; B removes the film table from the database.
+
+4. A removes the film table from the database; B & C remove all records from the film table.
+
+Ans: 4
+*/
+
+				--Delete selected records
+--You've discovered that some films are just not worth keeping your inventory, for cases where the replacement_cost is greater than 25 dollars. 
+--As such you'd like to remove them from you film table.
+
+--DELETE records from the film table who have a replacement_cost that is greater than $25.
+
+delete from film
+where replacement_cost>25
+
+				--A family friendly video store
+
+--Your company has decided to become a family friendly store. As such, all R & NC-17 movies will be cleared from the inventory. You will take the steps necessary 
+--to clear these films from both the inventory and the film tables.
+
+--1 Identify the film_id of all films that have a rating of R or NC-17.
+
+select film_id
+from film 
+where rating in ('R', 'NC-17')
+
+--2 Use the list of film_id values to DELETE all records in inventory.
+--Delete records from the film table that are either rated as R or NC-17.
+
+-- Use the list of film_id values to DELETE all R & NC-17 rated films from inventory.
+DELETE from inventory
+where film_id IN (
+  SELECT film_id FROM film
+  WHERE rating IN ('R', 'NC-17')
+);
+
+-- Delete records from the `film` table that are either rated as R or NC-17.
+DELETE from film
+where rating IN ('R', 'NC-17')
 
 
 
+							----Chapter 4: Best Practices for Writing SQL
 
 
-
-
-
-
+			--
 
 
 
