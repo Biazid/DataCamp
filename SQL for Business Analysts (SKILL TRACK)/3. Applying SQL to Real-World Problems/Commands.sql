@@ -292,18 +292,51 @@ order by average_length;
 
 
 
+				--Build the entity relationship diagram
+--Using the skills you learned throughout this chapter you will build an entity relationship diagram to trace and connect the tables needed to answer the 
+--following question:
+--Which films are most frequently rented?
+
+--1 The first piece of information for this diagram is the list of films you will need.
+--Which table should you query to get this information?
+--Ans: film
+
+--2 Question
+--Next, you need records of film's that were rented.
+--Which table should you query to get this information?
+--Ans: rental
+
+--3 Question
+--As you can see in the diagram below, the two tables you identified do not share a common id and hence cannot be joined directly.
+--What intermediate table can you use to join these tables and get the data that you need?
+--Ans: Inventory
+
+
+				--Which films are most frequently rented?
+
+--Now that you've figured out the relationships between the tables and their columns, you are ready to answer the question we started with:
+--Which films are most frequently rented?
+--Use the relationship diagram to answer this question.
+
+--Use the entity diagram above to correctly join the required tables to answer this question.
+
+SELECT title, COUNT(title)
+FROM film AS f
+INNER JOIN inventory AS i
+  ON f.film_id = i.film_id
+INNER JOIN rental AS r
+  ON i.inventory_id = r.inventory_id
+GROUP BY title
+ORDER BY count DESC;
+
+
+
+
+
+							--Chapter 3: Manage Your Data
+
+
 				--
-
-
-
-
-
-
-
-
-
-
-
 
 
 
