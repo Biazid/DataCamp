@@ -213,6 +213,97 @@ FROM payment
 GROUP BY month;
 
 
-			--
+			--What columns are in your database?
+--Just like pg_catalog.pg_tables can be incredibly helpful for listing all the tables in your database, information_schema.columns can be used to list the columns 
+--of these tables. In this exercise, you will combine these system tables to get a list of all of the columns for all your tables (in the 'public' schema).
+--Note: These system tables are specific to PostgreSQL but similar tables exist for other databases (see slides).
+
+--1 View all of the data in the information_schema.columns table by SELECTing all the columns within it.
+select *
+from information_schema.columns;
+
+--2 Limit your results to only the columns you need: table_name and column_name.
+--Filter the results where the table_schema is public
+
+SELECT table_name, column_name
+FROM information_schema.columns
+where table_schema='public';
+
+
+			--A VIEW of all your columns
+
+--In this exercise you will create a new tool for finding the tables and columns you need. Using the system table information_schema.columns you will concatenate
+--the list of each table's columns into a single entry.
+--Once you've done this you will make this query easily reusable by creating a new VIEW for it called table_columns.
+
+--1 Concatenate the column_name(s) for each table_name into a comma-separated list using the STRING_AGG() function and save this as a new field called columns.
+
+
+SELECT table_name, 
+       STRING_AGG(column_name, ', ') AS columns
+FROM information_schema.columns
+WHERE table_schema = 'public'
+GROUP BY table_name;
+
+--2 Store the previous query result in a new VIEW called table_columns.
+--Query your newly created view by SELECTing all its rows & columns.
+
+-- Create a new view called table_columns
+CREATE View table_columns AS
+SELECT table_name, 
+	   STRING_AGG(column_name, ', ') AS columns
+FROM information_schema.columns
+WHERE table_schema = 'public'
+GROUP BY table_name;
+
+-- Query the newly created view table_columns
+select *
+from table_columns;
+
+		
+				
+				--Testing out your new VIEW
+--You are interested in calculating the average movie length for every category. Which tables & columns will you need to create this query?
+--Note: The table_columns view is now stored in your database and can be used to help you with this question.
+--Ans: Tables: film & category -- Join on: film_id
+
+
+
+				--The average length of films by category
+
+--From the previous exercise you've learned that the tables film and category have the necessary information to calculate the average movie length for every category. 
+--You've also learned that they share a common field film_id which can be used to join these tables. Now you will use this information to query a list of
+--average length for each category.
+
+--Calculate the average length and return this column as average_length.
+--Join the two tables film and category.
+--Ensure that the result is in ascending order by the average length of each category.
+
+-- Calculate the average_length for each category
+SELECT c.category, 
+	   avg(f.length) AS average_length
+FROM film AS f
+-- Join the tables film & category
+INNER JOIN category AS c
+  ON f.film_id = c.film_id
+GROUP BY c.category
+-- Sort the results in ascending order by length
+order by average_length;
+
+
+
+				--
+
+
+
+
+
+
+
+
+
+
+
+
 
 
