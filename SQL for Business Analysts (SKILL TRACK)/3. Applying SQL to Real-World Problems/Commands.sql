@@ -145,5 +145,74 @@ Ans: I need to explore my database to find the data I'm looking for!
 
 							--Chapter 2: Find Your Data
 
---
+--				LIMITing your search
+
+--You may find yourself working with tables that contain so many records that simple queries can take forever to load. This is especially challenging when you're 
+--searching for the right table to use and just need a quick result. For these scenarios the trick is to LIMIT the number of rows that your query returns. 
+--In this exercise you will practice using this function.
+
+--1 Use LIMIT to return all columns for the first 10 rows for the payment table.
+
+SELECT * 
+FROM payment
+limit 10;
+
+--2 Use LIMIT to return all columns for the 10 highest amount paid in the payments
+
+SELECT * 
+FROM payment
+order by amount desc
+LIMIT 10;
+
+			
+			--Which table to use?
+
+--Use the SELECT * FROM ___ LIMIT 10 framework to find the table you need to answer the following question:
+--What categories of films does this company rent?
+-- Ans: category
+
+
+			-- What tables are in your database?
+--You don't have to rely solely on knowing what tables exist. Instead, you can query the pg_catalog.pg_tables to list all of the tables that exist in your database.
+--Of course, this will list every table, including system tables so ideally, you want to limit your results to the schema where your data resides which in 
+--this case is 'public'.
+--Note: This system table is specific to PostgreSQL but similar tables exist for other databases (see slides).
+
+
+--List the tables that exist in your database by querying the table: pg_catalog.pg_tables.
+--Filter the query to ensure the result contains entries where the schemaname is 'public'.
+
+SELECT * 
+FROM pg_catalog.pg_tables
+where schemaname='public';
+
+			--Determine the monthly income
+--Now that you know how to find the table that you need to answer a question and how to use SQL to answer that question let's practice these skills end-to-end.
+--How much does this business make per month?
+--First, you will need to use pg_catalog.pg_tables to find the possible tables and determine which tables & columns you need to answer that question. 
+--Second, you will leverage the tools you learned in the previous chapter to prepare the answer.
+
+--1 Run the first section of code to list your tables.
+--Explore the tables to determine which you need to answer the question.
+--Once you've figured out which table to use, fill in the blank in this statement SELECT * FROM ___ LIMIT 10
+-- List all tables in the public schema
+SELECT * 
+FROM pg_catalog.pg_tables
+WHERE schemaname = 'public';
+
+-- Explore the tables and fill in the correct one
+SELECT * 
+FROM payment 
+LIMIT 10;
+
+--2 Calculate the total_payment per month.
+
+SELECT EXTRACT(MONTH FROM payment_date) AS month, 
+       SUM(amount) AS total_payment
+FROM payment 
+GROUP BY month;
+
+
+			--
+
 
