@@ -931,10 +931,219 @@ GROUP BY rollup(c.country,m.genre)
 ORDER BY c.country, m.genre;
 
 		
-			--
+			--Queries with GROUPING SETS
+--What question CANNOT be answered by the following query?
+
+SELECT 
+  r.customer_id, 
+  m.genre, 
+  AVG(r.rating), 
+  COUNT(*)
+FROM renting AS r
+LEFT JOIN movies AS m
+ON r.movie_id = m.movie_id
+GROUP BY GROUPING SETS ((r.customer_id, m.genre), (r.customer_id), ());
+
+--How many movies were watched by each customer?
+
+--What is the average rating for each genre?
+
+--What is the average rating of customer 75 for movies of the Comedy genre?
+
+--What is the overall average rating for all movies from all customers?
 
 
+--Ans: What is the average rating for each genre?
 
 
+		--Exploring nationality and gender of actors
+--For each movie in the database, the three most important actors are identified and listed in the table actors. This table includes the nationality and 
+--gender of the actors. We are interested in how much diversity there is in the nationalities of the actors and how many actors and actresses are in the list.
+
+--Count the number of actors in the table actors from each country, the number of male and female actors and the total number of actors.
+
+SELECT 
+	nationality, -- Select nationality of the actors
+    gender, -- Select gender of the actors
+    count(*) -- Count the number of actors
+FROM actors
+GROUP BY GROUPING SETS ((nationality), (gender), ());
+
+		--Exploring rating by country and gender
+--Now you will investigate the average rating of customers aggregated by country and gender.
+
+--1 Select the columns country, gender, and rating and use the correct join to combine the table renting with customer.
+SELECT 
+	country, 
+    gender,
+    rating
+FROM renting AS r
+Left Join customers AS c
+ON c.customer_id=r.customer_id;
+
+--2 Use GROUP BY to calculate the average rating over country and gender. Order the table by country and gender.
 
 
+SELECT 
+	c.country, 
+    c.gender,
+	avg(rating) -- Calculate average rating
+FROM renting AS r
+LEFT JOIN customers AS c
+ON r.customer_id = c.customer_id
+Group by c.country, c.gender -- Order and group by country and gender
+ORDER BY c.country, c.gender;
+
+
+--3 Now, use GROUPING SETS to get the same result, i.e. the average rating over country and gender.
+
+
+SELECT 
+	c.country, 
+    c.gender,
+	AVG(r.rating)
+FROM renting AS r
+LEFT JOIN customers AS c
+ON r.customer_id = c.customer_id
+Group by Grouping SETS ((Country, gender));
+
+--4 Report all information that is included in a pivot table for country and gender in one SQL table.
+
+
+SELECT 
+	c.country, 
+    c.gender,
+	AVG(r.rating)
+FROM renting AS r
+LEFT JOIN customers AS c
+ON r.customer_id = c.customer_id
+-- Report all info from a Pivot table for country and gender
+GROUP BY GROUPING SETS ((country, gender), (country), (gender), ());
+
+
+			--Customer preference for genres
+
+--You just saw that customers have no clear preference for more recent movies over older ones. Now the management considers investing money 
+--in movies of the best rated genres.
+
+--1 Augment the records of movie rentals with information about movies. Use the first letter of the table as alias.
+
+SELECT *
+FROM renting AS r
+Left Join movies AS m -- Augment the table with information about movies
+on r.movie_id=m.movie_id;
+
+--2 Select records of movies with at least 4 ratings, starting from 2018-04-01.
+
+SELECT *
+FROM renting AS r
+LEFT JOIN movies AS m
+ON m.movie_id = r.movie_id
+WHERE r.movie_id IN ( 
+	SELECT movie_id
+	FROM renting
+	GROUP BY movie_id
+	HAVING count(rating)>=4)
+AND r.date_renting>'2018-04-01'; 
+
+--3 For each genre, calculate the average rating (use the alias avg_rating), the number of ratings (use the alias n_rating), the number of movie rentals 
+--(use the alias n_rentals), and the number of distinct movies (use the alias n_movies).
+
+SELECT m.genre, 
+	   avg(rating) avg_rating, -- The average rating and use the alias avg_rating
+	   count(rating) n_rating, -- The number of ratings and use the alias n_rating
+	   count(*) n_rentals,     -- The number of movie rentals and use the alias n_rentals
+	   count(distinct r.movie_id) n_movies -- The number of distinct movies and use the alias n_movies
+FROM renting AS r
+LEFT JOIN movies AS m
+ON m.movie_id = r.movie_id
+WHERE r.movie_id IN ( 
+	SELECT movie_id
+	FROM renting
+	GROUP BY movie_id
+	HAVING COUNT(rating) >= 3)
+AND r.date_renting >= '2018-01-01'
+Group By m.genre;
+
+--4 Order the table by decreasing average rating.
+
+SELECT genre,
+	   AVG(rating) AS avg_rating,
+	   COUNT(rating) AS n_rating,
+       COUNT(*) AS n_rentals,     
+	   COUNT(DISTINCT m.movie_id) AS n_movies 
+FROM renting AS r
+LEFT JOIN movies AS m
+ON m.movie_id = r.movie_id
+WHERE r.movie_id IN ( 
+	SELECT movie_id
+	FROM renting
+	GROUP BY movie_id
+	HAVING COUNT(rating) >= 3 )
+AND r.date_renting >= '2018-01-01'
+GROUP BY genre
+order by avg_rating desc; 
+
+
+					--Customer preference for actors
+
+--The last aspect you have to analyze are customer preferences for certain actors.
+
+-- 1 Join the tables.
+
+SELECT *
+FROM renting AS r
+LEFT JOIN actsin AS ai
+on r.movie_id=ai.movie_id
+LEFT JOIN actors AS a
+on a.actor_id=ai.actor_id;			
+			
+			
+-- 2 For each combination of the actors' nationality and gender, calculate the average rating, the number of ratings, the number of movie rentals, 
+--and the number of actors.
+
+SELECT a.nationality,
+       a.gender,
+	   AVG(r.rating) AS avg_rating, -- The average rating
+	   COUNT(r.rating) AS n_rating, -- The number of ratings
+	   COUNT(*) AS n_rentals, -- The number of movie rentals
+	   COUNT(DISTINCT a.actor_id) AS n_actors -- The number of actors
+FROM renting AS r
+LEFT JOIN actsin AS ai
+ON ai.movie_id = r.movie_id
+LEFT JOIN actors AS a
+ON ai.actor_id = a.actor_id
+WHERE r.movie_id IN ( 
+	SELECT movie_id
+	FROM renting
+	GROUP BY movie_id
+	HAVING COUNT(rating) >=4 )
+AND r.date_renting >= '2018-04-01'
+GROUP BY a.nationality, a.gender;
+
+--3 Provide results for all aggregation levels represented in a pivot table.
+
+SELECT a.nationality,
+       a.gender,
+	   AVG(r.rating) AS avg_rating,
+	   COUNT(r.rating) AS n_rating,
+	   COUNT(*) AS n_rentals,
+	   COUNT(DISTINCT a.actor_id) AS n_actors
+FROM renting AS r
+LEFT JOIN actsin AS ai
+ON ai.movie_id = r.movie_id
+LEFT JOIN actors AS a
+ON ai.actor_id = a.actor_id
+WHERE r.movie_id IN ( 
+	SELECT movie_id
+	FROM renting
+	GROUP BY movie_id
+	HAVING COUNT(rating) >= 4)
+AND r.date_renting >= '2018-04-01'
+GROUP BY CUBE (nationality,gender); 
+
+
+			
+			
+			
+			
