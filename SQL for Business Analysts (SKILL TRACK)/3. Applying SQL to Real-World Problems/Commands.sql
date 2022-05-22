@@ -539,17 +539,239 @@ where rating IN ('R', 'NC-17')
 							----Chapter 4: Best Practices for Writing SQL
 
 
-			--
+			--How to convey our intent
+/*
+Which of these approaches can you leverage to clarify the intent of your SQL script?
+
+1. Instead of JOIN use FULL JOIN.
+
+2. Use sequential aliases starting with the letter x (x1, x2, x3 …).
+
+3. Use comments when the approach can't be conveyed with just the code.
+
+4. Avoid using AS when aliasing, it will make your script shorter and easier to read.
+
+5. Clearly, all of the above!
+
+Ans: 3
+
+*/
+			--Clarify the intent of this query
+
+/*
+What can you do to improve this query with respect to conveying it's intent for future readers?
+
+SELECT x1.customer_id, x1.rental_date, x1.return_date 
+FROM rental x1
+JOIN inventory x2
+    ON x1.inventory_id = x2.inventory_id
+JOIN film x3
+    ON x2.film_id = x3.film_id
+WHERE x3.length < 90;
+
+*/
+/*
+Possible Answers
+
+1. Use aliases that help clarify the table source (e.g. x1 -> r or ren).
+
+2. Ensure that all aliases commands use AS.
+
+3. Clarify the type of JOIN being used by using INNER JOIN instead.
+
+4. Add a comment to clarify that the inventory table is used to unite the rental and film tables.
+
+5. All four steps would help convey the intent of this query.
+Ans: 5
+
+*/
+				--Fix this query - intent
+
+/*
+Using the four opportunities you've identified you will now clarify the intent of this query, one step at a time.
+
+SELECT x1.customer_id, x1.rental_date, x1.return_date 
+FROM rental x1
+JOIN inventory x2
+    ON x1.inventory_id = x2.inventory_id
+JOIN film x3
+    ON x2.film_id = x3.film_id
+WHERE x3.length < 90;
+*/
+
+--1 Use single letter aliases to help clarify the table source (e.g. x1 -> r).
+--Note: Using x1 -> ren would be appropriate as well, but for this exercise please stick to single letter aliases.
+
+SELECT r.customer_id, r.rental_date, r.return_date 
+FROM rental r
+JOIN inventory i
+  ON r.inventory_id = i.inventory_id
+JOIN film f
+  ON i.film_id = f.film_id
+WHERE f.length < 90;
+
+--2 Ensure that all aliases commands use AS.
+
+SELECT r.customer_id, r.rental_date, r.return_date 
+FROM rental AS r
+JOIN inventory AS i
+  ON r.inventory_id = i.inventory_id
+JOIN film AS f
+  ON i.film_id = f.film_id
+WHERE f.length < 90;
+
+--3 Clarify the type of JOIN being used by using INNER JOIN instead.
+
+SELECT r.customer_id, r.rental_date, r.return_date 
+FROM rental AS r
+INNER JOIN inventory AS i
+  ON r.inventory_id = i.inventory_id
+INNER JOIN film AS f
+  ON i.film_id = f.film_id
+WHERE f.length < 90;
+
+--4 Add a comment to clarify that the inventory table is used to unite the rental and film tables.
+
+SELECT r.customer_id, r.rental_date, r.return_date 
+FROM rental AS r
+/*inventory table is used to unite the rental and film tables. */ 
+INNER JOIN inventory AS i
+  ON r.inventory_id = i.inventory_id
+INNER JOIN film AS f
+  ON i.film_id = f.film_id
+WHERE f.length < 90;
 
 
+				--How to make code easier to read
 
+/*'
+Which of these strategies can be used to make SQL scripts easier to read?
 
+Possible Answers
 
+1. Use CamelCase for column and table names.
 
+2. Always use IN instead of OR.
 
+3. Use lowercase text for all text in your query.
 
+4. Use IN instead of multiple AND statements.
 
+5. All of the above are necessary to make scripts easy to read.
 
+6. None of the above.
+Ans: 6
+*/
+
+				--Make this query easier to read - Part I
+/*
+In this exercise you will work on making the query below easier to read.
+
+SELECT title, rating FROM film 
+WHERE rating = 'G' OR rating = 'PG' OR rating = 'R';
+*/
+--1 
+/*Question
+Which of these strategies should you employ to improve the readability of this query?
+
+(1) Capitalize SQL commands.
+(2) Use new lines & indentation.
+(3) Use snake_case.
+(4) Use IN instead of many OR statements.
+(5) Use BETWEEN when possible.
+
+Possible Answers
+
+(1) and (2)
+
+(3)
+
+(2) and (4)        Ans
+
+All five
+
+Ans: 2 & 4
+*/
+
+--2 (2) Improve the readability of the code by correctly using new lines and indentation.
+--(4) Instead of using multiple OR statements use IN.
+
+SELECT title, 
+       rating 
+FROM film 
+WHERE rating in ('G','PG', 'R');
+
+			--Make this query easier to read - Part II
+
+/*
+In this exercise you will work on making the query below easier to read.
+
+select 
+  category as FILMCATEGORY, 
+  avg(length) as AverageLength
+from film as f
+inner join category as c
+  on f.film_id = c.film_id
+where release_year >= 2005
+  and release_year <= 2010
+group by category;
+
+*/
+
+--1 
+/*
+
+Which of these strategies should you employ to improve the readability of this query?
+
+(1) Capitalize SQL commands.
+(2) Use new lines & indentation.
+(3) Use snake_case.
+(4) Use IN instead of many OR statements.
+(5) Use BETWEEN when possible.
+Possible Answers
+
+(1) and (5).
+
+(1), (3) and (5). 		Ans
+
+Only (1).
+
+None of these are necessary.
+
+Ans: (1), (3) and (5)
+
+*/
+
+--2  Capitalize SQL commands, leave everything else as lower case.
+
+SELECT category AS FILMCATEGORY, 
+  	   AVG(length) AS AverageLength
+FROM film AS f
+INNER JOIN category AS c
+  ON f.film_id = c.film_id
+WHERE release_year >= 2005
+  AND release_year <= 2010
+GROUP BY category;
+
+--3  Ensure that aliases use snake case
+SELECT category AS FILM_CATEGORY, 
+	   AVG(length) AS Average_Length
+FROM film AS f
+INNER JOIN category AS c
+  ON f.film_id = c.film_id
+WHERE release_year >= 2005
+  AND release_year <= 2010
+GROUP BY category;
+
+--4 Use BETWEEN instead of multiple AND statements.
+
+SELECT category AS film_category, 
+       AVG(length) AS average_length
+FROM film AS f
+INNER JOIN category AS c
+  ON f.film_id = c.film_id
+WHERE release_year BETWEEN 2005 AND 2010
+GROUP BY category;
 
 
 
