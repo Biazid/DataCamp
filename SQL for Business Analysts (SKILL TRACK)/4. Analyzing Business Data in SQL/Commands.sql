@@ -121,10 +121,18 @@ FROM monthly_cost
 WHERE delivr_month<'2018-09-01';
 
 
-                                    --
+                                    --Profit per eatery
 
-
-
+/*
+Delivr is renegotiating its contracts with its eateries. The higher the profit that an eatery generates, the higher the rate that Delivr is willing to pay 
+this eatery for the bulk purchase of meals.
+The Business Development team asks you to find out how much profit each eatery is generating to strengthen their negotiating positions.
+Note: You don't need to GROUP BY eatery in the final query. You've already grouped by eatery in the revenue and cost CTEs; all that's required is joining them to 
+each other to get each eatery's revenue and cost in one row. Since revenue and cost take up one row each per eatery, there are no additional groupings to be made.
+*/
+--Calculate revenue per eatery in the revenue CTE.
+--Calculate cost per eatery in the cost CTE.
+--Join the two CTEs and calculate profit per eatery.
 
 
 
