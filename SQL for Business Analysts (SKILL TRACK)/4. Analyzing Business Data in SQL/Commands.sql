@@ -119,7 +119,7 @@ SELECT
   AVG(cost)
 FROM monthly_cost
 WHERE delivr_month<'2018-09-01';
-
+      		
 
                                     --Profit per eatery
 
