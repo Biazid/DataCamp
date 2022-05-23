@@ -133,6 +133,140 @@ each other to get each eatery's revenue and cost in one row. Since revenue and c
 --Calculate revenue per eatery in the revenue CTE.
 --Calculate cost per eatery in the cost CTE.
 --Join the two CTEs and calculate profit per eatery.
+WITH revenue AS (
+  -- Calculate revenue per eatery
+  SELECT meals.eatery,
+         SUM(meal_price*order_quantity) AS revenue
+    FROM meals
+    JOIN orders ON meals.meal_id = orders.meal_id
+   GROUP BY eatery),
+
+  cost AS (
+  -- Calculate cost per eatery
+  SELECT meals.eatery,
+         SUM(meal_cost * stocked_quantity) AS cost
+    FROM meals
+    JOIN stock ON meals.meal_id = stock.meal_id
+   GROUP BY eatery)
+
+   -- Calculate profit per eatery
+   SELECT revenue.eatery,
+          revenue-cost as profit
+     FROM revenue
+     JOIN cost ON revenue.eatery = cost.eatery
+    ORDER BY profit DESC;
+    
+    
+                                      --Profit per month
+/*
+After prioritizing and making deals with eateries by their overall profits, Alice wants to track Delivr profits per month to see how well it's doing. 
+You're here to help.
+You're provided with two CTEs. The first stores revenue and the second stores cost. To access revenue and cost in one query, the two CTEs are joined in the last query.
+From there, you can apply the formula for profit Profit = Revenue - Cost to calculate profit per month.
+Remember that revenue is the sum of each meal's price times its order quantity, and that cost is the sum of each meal's cost times its stocked quantity.
+*/
+
+--Calculate revenue per month in the revenue CTE.
+--Calculate cost per month in the cost CTE.
+--Join the two CTEs and calculate profit per month.
+
+-- Set up the revenue CTE
+WITH revenue AS ( 
+	SELECT
+		DATE_TRUNC('month', order_date) :: DATE AS delivr_month,
+		SUM(meal_price*order_quantity) AS revenue
+	FROM meals
+	JOIN orders ON meals.meal_id = orders.meal_id
+	GROUP BY delivr_month),
+-- Set up the cost CTE
+  cost AS (
+ 	SELECT
+		DATE_TRUNC('month', stocking_date) :: DATE AS delivr_month,
+		SUM(meal_cost * stocked_quantity) AS cost
+	FROM meals
+    JOIN stock ON meals.meal_id = stock.meal_id
+	GROUP BY delivr_month)
+-- Calculate profit by joining the CTEs
+SELECT
+	revenue.delivr_month,
+	revenue-cost as profit
+FROM revenue
+JOIN cost ON revenue.delivr_month = cost.delivr_month
+ORDER BY revenue.delivr_month ASC;  
+  
+  
+                                                ----------    ----Chapter 2: User-centric KPIs
+
+
+                                  --Registrations by month
+/*
+Usually, registration dates are stored in a table containing users' metadata. However, Delivr only considers a user registered if that user has ordered at least once. 
+A Delivr user's registration date is the date of that user's first order.
+Bob, the Investment Relations Manager at Delivr, is preparing a pitch deck for a meeting with potential investors. He wants to add a line chart of registrations 
+by month to highlight Delivr's success in gaining new users.
+Send Bob a table of registrations by month.
+*/
+--1
+--Return a table of user IDs and their registration dates.
+--Order by user_id in ascending order.
+
+SELECT
+  -- Get the earliest (minimum) order date by user ID
+  user_id,
+  min(order_date) AS reg_date
+FROM orders
+GROUP BY user_id
+-- Order by user ID
+ORDER BY user_id ASC;
+
+--2
+--Wrap the query you just wrote in a CTE named reg_dates.
+--Using reg_dates, return a table of registrations by month.
+
+-- Wrap the query you wrote in a CTE named reg_dates
+WITH reg_dates AS (
+  SELECT
+    user_id,
+    MIN(order_date) AS reg_date
+  FROM orders
+  GROUP BY user_id)
+SELECT
+  -- Count the unique user IDs by registration month
+  DATE_TRUNC('month', reg_date) :: DATE AS delivr_month,
+  COUNT (DISTINCT user_id) AS regs
+FROM reg_dates
+GROUP BY delivr_month
+ORDER BY delivr_month ASC; 
+
+
+
+                                      --  Monthly active users (MAU)
+/*
+Bob predicts that the investors won't be satisfied with only registrations by month. They will want to know how many users actually used Delivr as well. 
+He's decided to include another line chart of Delivr's monthly active users (MAU); he's asked you to send him a table of monthly active users.
+*/
+--Select the month by truncating the order dates.
+--Calculate MAU by counting the users for every month.
+--Order by month in ascending order.
+
+SELECT
+  -- Truncate the order date to the nearest month
+  DATE_TRUNC('month', order_date) :: DATE AS delivr_month,
+  -- Count the unique user IDs
+  COUNT(DISTINCT user_id) AS mau
+FROM orders
+GROUP BY delivr_month
+-- Order by month
+ORDER BY delivr_month ASC;
+
+
+                                      --
+
+
+
+
+
+
 
 
 
