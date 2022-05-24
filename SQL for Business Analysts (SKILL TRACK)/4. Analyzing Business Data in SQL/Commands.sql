@@ -865,7 +865,14 @@ Figure out the format string that formats 2018-06-01 as "Friday 01, June 2018" w
 --Select the order date.
 --Format the order date so that 2018-06-01 is formatted as Friday 01, June 2018.
 
-
+SELECT DISTINCT
+  -- Select the order date
+  order_date,
+  -- Format the order date
+  TO_CHAR(order_date, 'FMDay DD, FMMonth YYYY') AS format_order_date
+FROM orders
+ORDER BY order_date ASC
+LIMIT 3;
 
 
 
@@ -879,11 +886,38 @@ Send Eve a list of the top 3 user IDs by orders in August 2018 with their ranks.
 */
 --1 Keep only the orders in August 2018.
 
+SELECT
+  user_id,
+  COUNT(DISTINCT order_id) AS count_orders
+FROM orders
+-- Only keep orders in August 2018
+WHERE order_date between '2018-08-01' AND '2018-08-31'
+GROUP BY user_id;
 
 
+--2 Wrap the previous query in a CTE named user_count_orders.
+--Select the user ID and rank all user IDs by the count of orders in descending order.
+--Only keep the top 3 users by their count of orders.
 
+-- Set up the user_count_orders CTE
+WITH user_count_orders AS (
+  SELECT
+    user_id,
+    COUNT(DISTINCT order_id) AS count_orders
+  FROM orders
+  -- Only keep orders in August 2018
+  WHERE DATE_TRUNC('month', order_date) = '2018-08-01'
+  GROUP BY user_id)
 
---2 
+SELECT
+  -- Select user ID, and rank user ID by count_orders
+  user_id,
+  RANK() OVER (ORDER BY count_orders desc) AS count_orders_rank
+FROM user_count_orders
+ORDER BY count_orders_rank ASC
+-- Limit the user IDs selected to 3
+LIMIT 3;
+
 
 
 
@@ -896,6 +930,7 @@ Pivot the user revenues by month query so that the user ID is a row and each mon
 */
 --Enable CROSSTAB() from tablefunc.
 --Declare the new pivot table's columns, user ID and the first three months of operation.
+
 
 
 
