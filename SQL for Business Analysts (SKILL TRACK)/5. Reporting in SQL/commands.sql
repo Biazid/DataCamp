@@ -156,6 +156,104 @@ GROUP BY bronze;
 
 
 				--Validating our query
+/*
+The same techniques we use to explore the data can be used to validate queries. By using the query as a subquery, you can run exploratory techniques to 
+confirm the query results are as expected.
+
+In this exercise, you will create a query that shows Bronze Medals by Country and then validate it using the subquery technique.
+
+Feel free to reference the E:R Diagram as needed.
+*/
+
+--1 Create a query that outputs total bronze medals from the summer_games table.
+-- Pull total_bronze_medals from summer_games below
+SELECT count(bronze) AS total_bronze_medals
+FROM summer_games;
+
+--2 The value for total_bronze_medals is commented out for reference. Setup a query that shows bronze_medals for summer_games by country.
+
+/* Pull total_bronze_medals from summer_games below
+SELECT SUM(bronze) AS total_bronze_medals
+FROM summer_games; 
+>> OUTPUT = 141 total_bronze_medals */
+
+-- Setup a query that shows bronze_medal by country
+SELECT 
+	country, 
+    sum(bronze) AS bronze_medals
+FROM summer_games AS s
+JOIN countries AS c
+ON c.id=s.country_id
+GROUP BY country;
+
+
+--3 Add parenthesis to your query you just created and alias as subquery.
+--Select the total number of bronze_medals and compare to the total bronze medals in summer_games.
+
+/* Pull total_bronze_medals below
+SELECT SUM(bronze) AS total_bronze_medals
+FROM summer_games; 
+>> OUTPUT = 141 total_bronze_medals */
+
+-- Select the total bronze_medals from your query
+SELECT SUM(bronze_medals)
+FROM
+-- Previous query is shown below.  Alias this AS subquery
+  (
+  SELECT 
+      country, 
+      SUM(bronze) AS bronze_medals
+  FROM summer_games AS s
+  JOIN countries AS c
+  ON s.country_id = c.id
+  GROUP BY country) AS subquery
+;
+
+	
+				--Report 1: Most decorated summer athletes
+/*
+Now that you have a good understanding of the data, let's get back to our case study and build out the first element for the dashboard, 
+Most Decorated Summer Athletes:
+
+Photo: Column Chart
+
+Your job is to create the base report for this element. Base report details:
+
+Column 1 should be athlete_name.
+Column 2 should be gold_medals.
+The report should only include athletes with at least 3 medals.
+The report should be ordered by gold medals won, with the most medals at the top.
+*/
+
+--Select athlete_name and gold_medals by joining summer_games and athletes.
+--Only include athlete_name with at least 3 gold medals.
+--Sort the table so that the most gold_medals appears at the top.
+
+-- Pull athlete_name and gold_medals for summer games
+SELECT 
+	a.name AS athlete_name, 
+    sum(gold) AS gold_medals
+FROM summer_games AS s
+JOIN athletes AS a
+ON s.athlete_id=a.id
+GROUP BY athlete_name
+-- Filter for only athletes with 3 gold medals or more
+HAVING sum(gold)>2
+-- Sort to show the most gold medals at the top
+ORDER BY gold_medals DESC;
+
+
+
+							--Chapter 2: Creating Reports
+
+				--
+
+
+
+
+
+
+
 
 
 
