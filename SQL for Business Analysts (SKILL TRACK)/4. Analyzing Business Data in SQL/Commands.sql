@@ -659,7 +659,92 @@ GROUP BY orders
 ORDER BY orders ASC;
 
 
+					--Bucketing users by revenue
+/*
+Based on his analysis, Dave identified that $150 is a good cut-off for low-revenue users, and $300 is a good cut-off for mid-revenue users. He wants to find the 
+number of users in each category to tweak Delivr's business model.
+Split the users into low, mid, and high-revenue buckets, and return the count of users in each group.
+*/
+--Store each user ID and the revenue it generates in the user_revenues CTE.
+--Return a table of the revenue groups and the count of users in each group.
+
+WITH user_revenues AS (
+  SELECT
+    -- Select the user IDs and the revenues they generate
+    user_id,
+    SUM(meal_price*order_quantity) AS revenue
+  FROM meals AS m
+  JOIN orders AS o ON m.meal_id = o.meal_id
+  GROUP BY user_id)
+
+SELECT
+  -- Fill in the bucketing conditions
+  CASE
+    WHEN revenue<150 THEN 'Low-revenue users'
+    WHEN revenue<300 THEN 'Mid-revenue users'
+    ELSE 'High-revenue users'
+  END AS revenue_group,
+  COUNT(DISTINCT user_id) AS users
+FROM user_revenues
+GROUP BY revenue_group;
+
+
+					--Bucketing users by orders
+/*
+Dave is repeating his bucketing analysis on orders to have a more complete profile of each group. He determined that 8 orders is a good cut-off for the 
+low-orders group, and 15 is a good cut-off for the medium orders group.
+Send Dave a table of each order group and how many users are in it.
+*/
+--Store each user ID and its count of orders in a CTE named user_orders.
+--Set the cut-off point for the low-orders bucket to 8 orders, and set the cut-off point for the mid-orders bucket to 15 orders.
+--Count the distinct users in each bucket.
+
+-- Store each user's count of orders in a CTE named user_orders
+WITH user_orders AS(
+  SELECT
+    user_id,
+    COUNT(DISTINCT order_id) AS orders
+  FROM orders
+  GROUP BY user_id)
+
+SELECT
+  -- Write the conditions for the three buckets
+  CASE
+    WHEN orders<8 THEN 'Low-orders users'
+    WHEN orders<15 THEN 'Mid-orders users'
+    ELSE 'High-orders users'
+  END AS order_group,
+  -- Count the distinct users in each bucket
+  COUNT(DISTINCT user_id) AS users
+FROM user_orders
+GROUP BY order_group;
+
+
 					--
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
