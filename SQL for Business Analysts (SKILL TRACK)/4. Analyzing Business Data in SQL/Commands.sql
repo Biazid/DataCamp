@@ -464,7 +464,62 @@ FROM orders_with_lag
 ORDER BY delivr_month ASC;
 
 
-				--
+				--New, retained, and resurrected users 
+				
+
+--In August 2018, Delivr had 300 overall active users. Of these users, 124 were retained from last month, and 67 were resurrected users who weren't active in previous 
+--months but returned to the platform in August. How many users were new?
+--Ans: 109
+
+				--Retention rate
+				--(complex)
+/*
+Bob's requested your help again now that you're done with Carol's MAU monitor. His meeting with potential investors is fast approaching, and he wants to wrap up his 
+pitch deck. You've already helped him with the registrations running total by month and MAU line charts; the investors, Bob says, would be convinced that Delivr is 
+growing both in new users and in MAUs.
+However, Bob wants to show that Delivr not only attracts new users but also retains existing users. Send him a table of MoM retention rates so that he can highlight 
+Delivr's high user loyalty.
+*/
+
+--Select the month column from user_monthly_activity, and calculate the MoM user retention rates.
+--Join user_monthly_activity to itself on the user ID and the month, pushed forward one month.
+
+WITH user_monthly_activity AS (
+  SELECT DISTINCT
+    DATE_TRUNC('month', order_date) :: DATE AS delivr_month,
+    user_id
+  FROM orders)
+
+SELECT
+  -- Calculate the MoM retention rates
+  previous.delivr_month,
+  ROUND(
+    COUNT(DISTINCT current.user_id) :: NUMERIC /
+    GREATEST(COUNT(DISTINCT previous.user_id),1),
+  2) AS retention_rate
+FROM user_monthly_activity AS previous
+LEFT JOIN user_monthly_activity AS current
+-- Fill in the user and month join conditions
+ON previous.user_id=current.user_id
+AND previous.delivr_month = (current.delivr_month - INTERVAL '1 month')
+GROUP BY previous.delivr_month
+ORDER BY previous.delivr_month ASC;
+
+
+
+							--Chapter 3: ARPU, histograms, and percentiles
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
