@@ -541,7 +541,127 @@ SELECT ROUND(avg(revenue) :: NUMERIC, 2) AS arpu
 FROM kpi;
 
 
-						--
+						--ARPU per week
+/*
+Next, Dave wants to see whether ARPU has increased over time. Even if Delivr's revenue is increasing, it's not scaling well if its ARPU is decreasing—it's 
+generating less revenue from each of its customers.
+Send Dave a table of ARPU by week using the second way discussed in Lesson 3.1.
+*/
+--Store revenue and the number of unique active users by week in the kpi CTE.
+--Calculate ARPU by dividing the revenue by the number of users.
+--Order the results by week in ascending order.
+
+WITH kpi AS (
+  SELECT
+    -- Select the week, revenue, and count of users
+    DATE_TRUNC('week',order_date) :: DATE AS delivr_week,
+    SUM(meal_price*order_quantity) AS revenue,
+    COUNT(DISTINCT user_id) AS users
+  FROM meals AS m
+  JOIN orders AS o ON m.meal_id = o.meal_id
+  GROUP BY delivr_week)
+
+SELECT
+  delivr_week,
+  -- Calculate ARPU
+  ROUND(
+    revenue :: NUMERIC / GREATEST(users,1),
+  2) AS arpu
+FROM kpi
+-- Order by week in ascending order
+ORDER BY delivr_week ASC;
+
+
+					--Average orders per user
+
+/*
+Dave wants to add the average orders per user value to his unit economics study, since more orders usually correspond to more revenue.
+Calculate the average orders per user for Dave.
+Note: The count of distinct orders is different than the sum of ordered meals. One order can have many meals within it. Average orders per user depends on the c
+ount of orders, not the sum of ordered meals.
+*/ 
+--Store the count of distinct orders and distinct users in the kpi CTE.
+--Calculate the average orders per user.
+
+WITH kpi AS (
+  SELECT
+    -- Select the count of orders and users
+    COUNT(DISTINCT order_id) AS orders,
+    COUNT(DISTINCT user_id) AS users
+  FROM orders)
+
+SELECT
+  -- Calculate the average orders per user
+  ROUND(
+    orders :: NUMERIC / GREATEST(users,1),
+  2) AS arpu
+FROM kpi;
+
+
+					--Histogram of revenue
+/*
+After determining that Delivr is doing well at scaling its business model, Dave wants to explore the distribution of revenues. He wants to see whether the 
+distribution is U-shaped or normal to see how best to categorize users by the revenue they generate.
+Send Dave a frequency table of revenues by user.
+*/
+--Store each user ID and the revenue Delivr generates from it in the user_revenues CTE.
+--Return a frequency table of revenues rounded to the nearest hundred and the users generating those revenues.
+
+
+WITH user_revenues AS (
+  SELECT
+    -- Select the user ID and revenue
+    user_id,
+    SUM(meal_price*order_quantity) AS revenue
+  FROM meals AS m
+  JOIN orders AS o ON m.meal_id = o.meal_id
+  GROUP BY user_id)
+
+SELECT
+  -- Return the frequency table of revenues by user
+  ROUND(revenue :: NUMERIC, -2) AS revenue_100,
+  COUNT(DISTINCT user_id) AS users
+FROM user_revenues
+GROUP BY revenue_100
+ORDER BY revenue_100 ASC;
+
+						--Histogram of orders
+/*
+Dave also wants to plot the histogram of orders to see if it matches the shape of the histogram of revenues.
+Send Dave a frequency table of orders by user.
+*/
+--1 Set up the frequency tables query by getting each user's count of orders.
+
+SELECT
+  -- Select the user ID and the count of orders
+  user_id,
+  COUNT(DISTINCT order_id) AS orders
+FROM orders
+GROUP BY user_id
+ORDER BY user_id ASC
+LIMIT 5;
+
+--2 Return a frequency table of orders and the count of users with those orders.
+
+WITH user_orders AS (
+  SELECT
+    user_id,
+    COUNT(DISTINCT order_id) AS orders
+  FROM orders
+  GROUP BY user_id)
+
+SELECT
+  -- Return the frequency table of orders by user
+  orders,
+  COUNT(DISTINCT user_id) AS users
+FROM user_orders
+GROUP BY orders
+ORDER BY orders ASC;
+
+
+					--
+
+
 
 
 
