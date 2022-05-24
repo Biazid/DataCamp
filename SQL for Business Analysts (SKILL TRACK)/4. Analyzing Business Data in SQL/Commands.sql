@@ -1023,8 +1023,7 @@ Bean Me Up Scotty  Q4 2018           2
 Burgatorio         Q2 2018           2           
 ...                ...             ...            
 
-Ans: 
-
+Ans: Pivot the table by quarter so that each quarter is a column.
 
 
 						--Executive report
@@ -1036,6 +1035,9 @@ Send Eve a table of unique ordering users by eatery and by quarter.
 */
 --1 Fill in the format string that formats 2018-06-01 as Q2 2018.
 Count the ordering users by eatery and by quarter.
+
+
+
 
 
 --2
