@@ -454,6 +454,8 @@ WITH orders AS (
 
 SELECT
   delivr_month,
+  orders,
+  last_orders,
   -- Calculate the MoM order growth rate
   ROUND(
     (orders-last_orders)/last_orders :: NUMERIC,
