@@ -509,11 +509,39 @@ ORDER BY previous.delivr_month ASC;
 
 							--Chapter 3: ARPU, histograms, and percentiles
 
+					--Average revenue per user
+/*
+Dave from Finance wants to study Delivr's performance in revenue and orders per each of its user base. In other words, he wants to understand its unit economics.
+Help Dave kick off his study by calculating the overall average revenue per user (ARPU) using the first way discussed in Lesson 3.1.
+*/
+--1 Return a table of user IDs and the revenue each user generated.
+
+SELECT
+  -- Select the user ID and calculate revenue
+  user_id,
+  SUM(meal_price*order_quantity) AS revenue
+FROM meals AS m
+JOIN orders AS o ON m.meal_id = o.meal_id
+GROUP BY user_id;
+
+--2 Wrap the previous query in a CTE named kpi.
+--Return the average revenue per user (ARPU).
+
+-- Create a CTE named kpi
+WITH kpi AS (
+  SELECT
+    -- Select the user ID and calculate revenue
+    user_id,
+    SUM(m.meal_price * o.order_quantity) AS revenue
+  FROM meals AS m
+  JOIN orders AS o ON m.meal_id = o.meal_id
+  GROUP BY user_id)
+-- Calculate ARPU
+SELECT ROUND(avg(revenue) :: NUMERIC, 2) AS arpu
+FROM kpi;
 
 
-
-
-
+						--
 
 
 
