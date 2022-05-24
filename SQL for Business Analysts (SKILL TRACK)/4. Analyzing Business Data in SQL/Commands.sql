@@ -344,14 +344,125 @@ ORDER BY delivr_month ASC;
 
 
 
+				--MAU monitor (II)
+/*
+Now that you've built the basis for Carol's MAU monitor, write a query that returns a table of months and the deltas of each month's current and previous MAUs.
+If the delta is negative, less users were active in the current month than in the previous month, which triggers the monitor to raise a red flag so
+the Product team can investigate.
+*/
+--Fetch the previous month's MAU in the mau_with_lag CTE..
+--Select the month and the delta between its MAU and the previous month's MAU.
+--Order by month in ascending order.
+
+WITH mau AS (
+  SELECT
+    DATE_TRUNC('month', order_date) :: DATE AS delivr_month,
+    COUNT(DISTINCT user_id) AS mau
+  FROM orders
+  GROUP BY delivr_month),
+
+  mau_with_lag AS (
+  SELECT
+    delivr_month,
+    mau,
+    -- Fetch the previous month's MAU
+    COALESCE(
+      LAG(mau) OVER (ORDER BY delivr_month ASC),
+    0) AS last_mau
+  FROM mau)
+
+SELECT
+  -- Calculate each month's delta of MAUs
+  delivr_month,
+  mau,
+  last_mau,
+  mau-last_mau AS mau_delta
+FROM mau_with_lag
+-- Order by month in ascending order
+ORDER BY delivr_month ASC;
+
+
+
+					--MAU monitor (III)
+/*
+Carol is very pleased with your last query, but she's requested one change: She prefers to have the month-on-month (MoM) MAU growth rate over a raw delta of MAUs. 
+That way, the MAU monitor can have more complex triggers, like raising a yellow flag if the growth rate is -2% and a red flag if the growth rate is -5%.
+Write a query that returns a table of months and each month's MoM MAU growth rate to finalize the MAU monitor.
+*/
+
+--Select the month and its MoM MAU growth rate.
+--Order by month in ascending order.
+
+WITH mau AS (
+  SELECT
+    DATE_TRUNC('month', order_date) :: DATE AS delivr_month,
+    COUNT(DISTINCT user_id) AS mau
+  FROM orders
+  GROUP BY delivr_month),
+
+  mau_with_lag AS (
+  SELECT
+    delivr_month,
+    mau,
+    GREATEST(
+      LAG(mau) OVER (ORDER BY delivr_month ASC),
+    1) AS last_mau
+  FROM mau)
+
+SELECT
+  -- Calculate the MoM MAU growth rates
+  delivr_month,
+  mau,
+  last_mau,
+  ROUND(
+    (mau-last_mau)/last_mau :: NUMERIC,
+  2) AS growth
+FROM mau_with_lag
+-- Order by month in ascending order
+ORDER BY delivr_month ASC;
+
+
+				--Order growth rate
+/*
+Bob needs one more chart to wrap up his pitch deck. He's covered Delivr's gain of new users, its growing MAUs, and its high retention rates. 
+Something is missing, though. Throughout the pitch deck, there's not a single mention of the best indicator of user activity: the users' orders! 
+The more orders users make, the more active they are on Delivr, and the more money Delivr generates.
+Send Bob a table of MoM order growth rates.
+(Recap: MoM means month-on-month.)
+*/
+--Count the unique orders per month.
+--Fetch each month's previous and current orders.
+--Return a table of MoM order growth rates.
+
+WITH orders AS (
+  SELECT
+    DATE_TRUNC('month', order_date) :: DATE AS delivr_month,
+    --  Count the unique order IDs
+    COUNT(DISTINCT order_id) AS orders
+  FROM orders
+  GROUP BY delivr_month),
+
+  orders_with_lag AS (
+  SELECT
+    delivr_month,
+    -- Fetch each month's current and previous orders
+    orders,
+    COALESCE(
+      LAG(orders) OVER (ORDER By delivr_month ASC),
+    1) AS last_orders
+  FROM orders)
+
+SELECT
+  delivr_month,
+  -- Calculate the MoM order growth rate
+  ROUND(
+    (orders-last_orders)/last_orders :: NUMERIC,
+  2) AS growth
+FROM orders_with_lag
+ORDER BY delivr_month ASC;
+
+
 				--
-
-
-
-
-
-
-
 
 
 
