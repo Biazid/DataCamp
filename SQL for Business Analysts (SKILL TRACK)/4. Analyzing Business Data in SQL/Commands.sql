@@ -720,18 +720,131 @@ FROM user_orders
 GROUP BY order_group;
 
 
-					--
+					--Revenue quartiles
+/*
+Dave is wrapping up his study, and wants to calculate a few more figures. He wants to find out the first, second, and third revenue quartiles. 
+He also wants to find the average to see in which direction the data is skewed.
+
+Calculate the first, second, and third revenue quartiles, as well as the average.
+
+Note: You can calculate the 30th percentile for a column named column_a by using 
+
+PERCENTILE_CONT(0.30) WITHIN GROUP (ORDER BY column_a ASC)
+
+*/
+--Store each user ID and the revenue Delivr generates from it in the user_revenues CTE.
+--Calculate the first, second, and third revenue quartile.
+--Calculate the average revenue.
+
+WITH user_revenues AS (
+  -- Select the user IDs and their revenues
+  SELECT
+    user_id,
+    SUM(meal_price*order_quantity) AS revenue
+  FROM meals AS m
+  JOIN orders AS o ON m.meal_id = o.meal_id
+  GROUP BY user_id)
+
+SELECT
+  -- Calculate the first, second, and third quartile
+  ROUND(
+    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY revenue ASC) :: NUMERIC,
+  2) AS revenue_p25,
+  ROUND(
+    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY revenue ASC) :: NUMERIC,
+  2) AS revenue_p50,
+  ROUND(
+    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY revenue ASC) :: NUMERIC,
+  2) AS revenue_p75,
+  -- Calculate the average
+  ROUND(AVG(revenue) :: NUMERIC, 2) AS avg_revenue
+FROM user_revenues;
 
 
+					--Interquartile range
+/*
+The final value that Dave wants is the count of users in the revenue interquartile range (IQR). Users outside the revenue IQR are outliers, and Dave wants 
+to know the number of "typical" users.
+
+Return the count of users in the revenue IQR.
+*/
+--1 Return a table of user IDs and generated revenues for each user.
+
+SELECT
+  -- Select user_id and calculate revenue by user
+  user_id,
+  SUM(meal_price*order_quantity) AS revenue
+FROM meals AS m
+JOIN orders AS o ON m.meal_id = o.meal_id
+GROUP BY user_id;
+
+--2 Wrap the previous query in a CTE named user_revenues.
+--Calculate the first and third revenue quartiles.
 
 
+-- Create a CTE named user_revenues
+WITH user_revenues AS (
+  SELECT
+    -- Select user_id and calculate revenue by user 
+    user_id,
+    SUM(m.meal_price * o.order_quantity) AS revenue
+  FROM meals AS m
+  JOIN orders AS o ON m.meal_id = o.meal_id
+  GROUP BY user_id)
+
+SELECT
+  -- Calculate the first and third revenue quartiles
+  ROUND(
+    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY revenue ASC) :: NUMERIC,
+  2) AS revenue_p25,
+  ROUND(
+    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY revenue ASC) :: NUMERIC,
+  2) AS revenue_p75
+FROM user_revenues;
 
 
+--3 Count the number of distinct users.
+--Filter out all users outside the IQR.
 
 
+WITH user_revenues AS (
+  SELECT
+    -- Select user_id and calculate revenue by user 
+    user_id,
+    SUM(m.meal_price * o.order_quantity) AS revenue
+  FROM meals AS m
+  JOIN orders AS o ON m.meal_id = o.meal_id
+  GROUP BY user_id),
 
+  quartiles AS (
+  SELECT
+    -- Calculate the first and third revenue quartiles
+    ROUND(
+      PERCENTILE_CONT(0.25) WITHIN GROUP
+      (ORDER BY revenue ASC) :: NUMERIC,
+    2) AS revenue_p25,
+    ROUND(
+      PERCENTILE_CONT(0.75) WITHIN GROUP
+      (ORDER BY revenue ASC) :: NUMERIC,
+    2) AS revenue_p75
+  FROM user_revenues)
 
+SELECT
+  -- Count the number of users in the IQR
+  COUNT(DISTINCT user_id) AS users
+FROM user_revenues
+CROSS JOIN quartiles
+-- Only keep users with revenues in the IQR range
+WHERE revenue :: NUMERIC >= revenue_p25
+  AND revenue :: NUMERIC <= revenue_p75;
+/*  
+output:
+users
+652
+  */
+  								--Chapter 4: Generating an executive report
 
+	
 
 
 
