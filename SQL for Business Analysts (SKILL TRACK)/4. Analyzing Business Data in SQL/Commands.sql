@@ -1024,7 +1024,7 @@ Burgatorio         Q2 2018           2
 ...                ...             ...            
 
 Ans: Pivot the table by quarter so that each quarter is a column.
-
+*/
 
 						--Executive report
 /*
@@ -1034,19 +1034,87 @@ She said she'll handle the pivoting, so you only need to prepare the source tabl
 Send Eve a table of unique ordering users by eatery and by quarter.
 */
 --1 Fill in the format string that formats 2018-06-01 as Q2 2018.
-Count the ordering users by eatery and by quarter.
+--Count the ordering users by eatery and by quarter.
+
+
+SELECT
+  eatery,
+  -- Format the order date so "2018-06-01" becomes "Q2 2018"
+  TO_CHAR(order_date, '"Q"Q YYYY') AS delivr_quarter,
+  -- Count unique users
+  COUNT(DISTINCT user_id) AS users
+FROM meals
+JOIN orders ON meals.meal_id = orders.meal_id
+GROUP BY eatery, delivr_quarter
+ORDER BY delivr_quarter, users;
 
 
 
+--2 Select the eatery and the quarter from the CTE.
+--Assign a rank to each row, with the top-most rank going to the row with the highest orders.
+
+WITH eatery_users AS  (
+  SELECT
+    eatery,
+    -- Format the order date so "2018-06-01" becomes "Q2 2018"
+    TO_CHAR(order_date, '"Q"Q YYYY') AS delivr_quarter,
+    -- Count unique users
+    COUNT(DISTINCT user_id) AS users
+  FROM meals
+  JOIN orders ON meals.meal_id = orders.meal_id
+  GROUP BY eatery, delivr_quarter
+  ORDER BY delivr_quarter, users)
+
+SELECT
+  -- Select eatery and quarter
+  eatery,
+  delivr_quarter,
+  -- Rank rows, partition by quarter and order by users
+  RANK() OVER
+    (PARTITION BY delivr_quarter
+     ORDER BY users DESC) :: INT AS users_rank
+FROM eatery_users
+ORDER BY delivr_quarter, users_rank;
 
 
---2
+--3 Import the tablefunc extension.
+--Pivot the table by quarter.
+--Select the new columns from the pivoted table.
 
+-- Import tablefunc
+CREATE EXTENSION IF NOT EXISTS tablefunc;
 
+-- Pivot the previous query by quarter
+SELECT * FROM CROSSTAB($$
+  WITH eatery_users AS  (
+    SELECT
+      eatery,
+      -- Format the order date so "2018-06-01" becomes "Q2 2018"
+      TO_CHAR(order_date, '"Q"Q YYYY') AS delivr_quarter,
+      -- Count unique users
+      COUNT(DISTINCT user_id) AS users
+    FROM meals
+    JOIN orders ON meals.meal_id = orders.meal_id
+    GROUP BY eatery, delivr_quarter
+    ORDER BY delivr_quarter, users)
 
---3
-
-
+  SELECT
+    -- Select eatery and quarter
+    eatery,
+    delivr_quarter,
+    -- Rank rows, partition by quarter and order by users
+    RANK() OVER
+      (PARTITION BY delivr_quarter
+       ORDER BY users DESC) :: INT AS users_rank
+  FROM eatery_users
+  ORDER BY eatery, delivr_quarter;
+$$)
+-- Select the columns of the pivoted table
+AS  ct (eatery TEXT,
+        "Q2 2018" INT,
+        "Q3 2018" INT,
+        "Q4 2018" INT)
+ORDER BY "Q4 2018";
 
 
 
