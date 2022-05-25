@@ -289,6 +289,95 @@ As always, feel free to reference your E:R Diagram to identify relevant fields a
 --Sort the report by events in descending order.
 
 
+-- Query season, country, and events for all summer events
+SELECT 
+	'summer' AS season, 
+    country, 
+    COUNT(DISTINCT event) AS events
+FROM summer_games AS s
+JOIN countries AS c
+ON c.id=s.country_id
+GROUP BY season,country
+-- Combine the queries
+UNION ALL
+-- Query season, country, and events for all winter events
+SELECT 
+	'winter' AS season, 
+    country, 
+    COUNT(DISTINCT event) AS events
+FROM winter_games AS w
+JOIN countries AS c
+ON c.id=w.country_id
+GROUP BY season,country
+-- Sort the results to show most events at the top
+ORDER BY events DESC;
+
+
+
+						--UNION then JOIN query
+/*
+Your goal is to create the same report as before, which contains with the following fields:
+
+-season, which outputs either summer or winter
+-country
+-events, which shows the unique number of events
+
+In this exercise, create the query by using the UNION first, JOIN second approach. When taking this approach, 
+you will need to use the initial UNION query as a subquery. The subquery will need to include all relevant fields, including those used in a join.
+*/
+
+--In the subquery, construct a query that outputs season, country_id and event by combining summer and winter games with a UNION ALL.
+--Leverage a JOIN and another SELECT statement to show the fields season, country and unique events.
+--GROUP BY any unaggregated fields.
+--Sort the report by events in descending order.
+
+
+-- Add outer layer to pull season, country and unique events
+SELECT 
+	season, 
+    country, 
+    COUNT(DISTINCT event) AS events
+FROM
+    -- Pull season, country_id, and event for both seasons
+    (SELECT 
+     	'summer' AS season, 
+     	country_id, 
+     	event
+    FROM summer_games
+    UNION ALL
+    SELECT 
+     	'winter' AS season, 
+     	country_id, 
+     	event
+    FROM winter_games) AS subquery
+JOIN countries AS c
+ON c.id=subquery.country_id
+-- Group by any unaggregated fields
+GROUP BY season, country
+-- Order to show most events at the top
+ORDER BY events DESC;
+
+
+
+						--
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
