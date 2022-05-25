@@ -671,6 +671,67 @@ and troubleshoot the error.
 --1 Run the query in the console.
 --After reading the error, fix it by converting the data type to float.
 
+SELECT AVG(CAST(pop_in_millions AS float)) AS avg_population
+FROM country_stats;
+
+--2 Comment the first query and uncomment the second query.
+--Run the code and fix errors by making the join columns int.
+
+SELECT 
+	s.country_id, 
+    COUNT(DISTINCT s.athlete_id) AS summer_athletes, 
+    COUNT(DISTINCT w.athlete_id) AS winter_athletes
+FROM summer_games AS s
+JOIN winter_games_str AS w
+-- Fix the error by making both columns integers
+ON s.country_id = CAST(w.country_id AS int)
+GROUP BY s.country_id;
+
+
+					--Using date functions on strings
+/*
+There are several useful functions that act specifically on date or datetime fields. For example:
+
+DATE_TRUNC('month', date) truncates each date to the first day of the month.
+DATE_PART('year', date) outputs the year, as an integer, of each date value.
+In general, the arguments for both functions are ('period', field), where period is a date or time interval, such as 'minute', 'day', or 'decade'.
+
+In this exercise, your goal is to test out these date functions on the country_stats table, 
+specifically by outputting the decade of each year using two separate approaches. To run these functions, you will need to use CAST() function on the year field.
+*/
+
+--Pulling from the country_stats table, select the decade using two methods: DATE_PART() and DATE_TRUNC.
+--Convert the data type of the year field to fix errors.
+--Sum up gdp to get world_gdp.
+--Group and order by year (in descending order).
+
+
+SELECT 
+	year,
+    -- Pull decade, decade_truncate, and the world's gdp
+    DATE_PART('decade', CAST(year AS DATE)) AS decade,
+    DATE_TRUNC('decade', CAST(year AS DATE)) AS decade_truncated,
+    sum(gdp) AS world_gdp
+FROM country_stats
+-- Group and order by year in descending order
+GROUP BY year
+ORDER BY year DESC;
+
+
+					--
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
