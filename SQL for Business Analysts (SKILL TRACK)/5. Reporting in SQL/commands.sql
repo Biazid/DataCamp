@@ -491,6 +491,37 @@ In this exercise, use the JOIN approach.
 --Use a JOIN and a WHERE statement to filter for athletes ages 16 and below.
 
 
+-- Pull summer bronze_medals, silver_medals, and gold_medals
+SELECT 
+	sum(bronze) as bronze_medals, 
+    sum(silver) as silver_medals, 
+    sum(gold) as gold_medals
+FROM summer_games AS s
+JOIN athletes AS a
+ON a.id=s.athlete_id
+-- Filter for athletes age 16 or below
+WHERE age<=16;
+
+
+				--Filtering with a subquery
+/*
+Another approach to filter from a separate table is to use a subquery. The process is as follows:
+
+Create a subquery that outputs a list.
+In your main query, add a WHERE statement that references the list.
+Your goal is to create the same report as the last exercise, which contains the following characteristics:
+
+First column is bronze_medals, or the total number of bronze.
+Second column is silver_medals, or the total number of silver.
+Third column is gold_medals, or the total number of gold.
+Only summer_games are included.
+Report is filtered to only include athletes age 16 or under.
+In this exercise, use the subquery approach.
+*/
+
+--Create a query that pulls total bronze_medals, silver_medals, and gold_medals from summer_games.
+--Setup a subquery that outputs all athletes age 16 or below.
+--Add a WHERE statement that references the subquery to filter for athletes age 16 or below.
 
 
 
