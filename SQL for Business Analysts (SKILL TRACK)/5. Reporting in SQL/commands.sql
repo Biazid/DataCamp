@@ -731,18 +731,130 @@ The SUBSTRING(fieldName from S for N) returns N characters starting from positio
 --1 Update the field country_altered to output country in all lower-case.
 
 
+-- Convert country to lower case
+SELECT 
+	country, 
+    lower(country) AS country_altered
+FROM countries
+GROUP BY country;
+
+--2 Update the field country_altered to output country in proper-case.
+
+
+-- Convert country to proper case
+SELECT 
+	country, 
+    INITCAP(country) AS country_altered
+FROM countries
+GROUP BY country;
+
+--3 Update the field country_altered to output the left 3 characters of country.
+
+
+-- Output the left 3 characters of country
+SELECT 
+	country, 
+    LEFT(country,3) AS country_altered
+FROM countries
+GROUP BY country;
+
+--4 -- Output all characters starting with position 7
+SELECT 
+	country, 
+    SUBSTRING(country,7) AS country_altered
+FROM countries
+GROUP BY country;
 
 
 
+					--Replacing and removing substrings
+/*
+The REPLACE() function is a versatile function that allows you to replace or remove characters from a string. The syntax is as follows:
+
+REPLACE(fieldName, 'searchFor', 'replaceWith')
+
+Where fieldName is the field or string being updated, searchFor is the characters to be replaced, and replaceWith is the replacement substring.
+
+In this exercise, you will look at one specific value in the countries table and change up the format by using a few REPLACE() functions.
+*/
+
+-- 1 Create the field character_swap that replaces all '&' characters with 'and' from region.
+--Create the field character_remove that removes all periods from region
+
+SELECT 
+	region, 
+    -- Replace all '&' characters with the string 'and'
+    REPLACE(region,'&','and') AS character_swap,
+    -- Remove all periods
+    REPLACE(region,'.','')AS character_remove
+FROM countries
+WHERE region = 'LATIN AMER. & CARIB'
+GROUP BY region;
+
+
+--2 Add a new field called character_swap_and_remove that runs the alterations of both character_swap and character_remove in one go.
+
+SELECT 
+	region, 
+    -- Replace all '&' characters with the string 'and'
+    REPLACE(region,'&','and') AS character_swap,
+    -- Remove all periods
+    REPLACE(region,'.','') AS character_remove,
+    -- Combine the functions to run both changes at once
+    REPLACE(REPLACE(region,'&','and'),'.','') AS character_swap_and_remove
+FROM countries
+WHERE region = 'LATIN AMER. & CARIB'
+GROUP BY region;
+
+
+				--Fixing incorrect groupings
+/*
+One issues with having strings stored in different formats is that you may incorrectly group data. If the same value is represented in multiple ways, 
+your report will split the values into different rows, which can lead to inaccurate conclusions.
+
+In this exercise, you will query from the summer_games_messy table, which is a messy, smaller version of summer_games. You'll notice that the same event 
+is stored in multiple ways. Your job is to clean the event field to show the correct number of rows.
+*/
+
+--1 Create a query that pulls the number of distinct athletes by event from the table summer_games_messy.
+--Group by the non-aggregated field.
+
+-- Pull event and unique athletes from summer_games_messy 
+SELECT 
+	event, 
+    count(DISTINCT athlete_id) AS athletes
+FROM summer_games_messy
+-- Group by the non-aggregated field
+GROUP BY event;
+
+
+--2 Notice how we see 6 rows that relate to only 2 events. Alter the event field by trimming all leading and trailing spaces, alias as event_fixed, 
+--and update the GROUP BY accordingly.
+
+-- Pull event and unique athletes from summer_games_messy 
+SELECT 
+    -- Remove trailing spaces and alias as event_fixed
+    TRIM(event) AS event_fixed, 
+    COUNT(DISTINCT athlete_id) AS athletes
+FROM summer_games_messy
+-- Update the group by accordingly
+GROUP BY event_fixed;
+
+--3 Notice how there are now only 4 rows. Alter the event_fixed field further by removing all dashes (-).
+
+
+-- Pull event and unique athletes from summer_games_messy 
+SELECT
+    -- Remove trailing spaces and alias as event_fixed
+	REPLACE(TRIM(event),'-','') AS event_fixed, 
+    COUNT(DISTINCT athlete_id) AS athletes
+FROM summer_games_messy
+-- Update the group by accordingly
+GROUP BY event_fixed;
 
 
 
-
-
-
-
-
-
+						--
 
 
 
