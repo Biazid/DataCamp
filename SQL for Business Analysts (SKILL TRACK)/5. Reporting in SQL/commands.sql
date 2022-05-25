@@ -406,13 +406,89 @@ This makes it that you do not need an AND statement excluding already-mentioned 
 --Group by the non-aggregated fields.
 --Order the report by sport and then athletes in descending order.
 
+-- Pull in sport, bmi_bucket, and athletes
+SELECT 
+	sport,
+    -- Bucket BMI in three groups: <.25, .25-.30, and >.30	
+    CASE WHEN (100*weight/height^2)<0.25 THEN '<.25'
+    WHEN (100*weight/height^2)<=0.30 THEN '.25-.30'
+    WHEN (100*weight/height^2)>0.30 THEN '>.30' 
+    END AS bmi_bucket,
+    COUNT(DISTINCT athlete_id) AS athletes
+FROM summer_games AS s
+JOIN athletes AS a
+ON a.id=s.athlete_id
+-- GROUP BY non-aggregated fields
+GROUP BY sport, bmi_bucket
+-- Sort by sport and then by athletes in descending order
+ORDER BY sport, athletes desc;
+
+
+					--Troubleshooting CASE statements
+/*
+In the previous exercise, you may have noticed several null values in our case statement, which can indicate there is an issue with the code.
+
+In these instances, it's worth investigating to understand why these null values are appearing. In this exercise, you will go through a series of steps to 
+identify the issue and make changes to the code where necessary.
+*/
+
+--1 Comment out the query from last exercise (lines 2 - 12).
+--Create a query that pulls height, weight, and bmi from athletes and filters for null bmi values.
 
 
 
+-- Show height, weight, and bmi for all athletes
+SELECT 
+	height,
+    weight,
+    weight/height^2*100 AS bmi
+FROM athletes
+-- Filter for NULL bmi values
+WHERE weight/height^2*100 is NULL;
+
+
+--2 What is the reason we have null values in our bmi field?
+
+--Ans: There are numerous null weight values, which will calculate null bmi values.
+
+--3 Comment out the troubleshooting query, uncomment the original query, and add an ELSE line to the CASE statement that outputs 'no weight recorded'.
+
+
+SELECT 
+	sport,
+    CASE WHEN weight/height^2*100 <.25 THEN '<.25'
+    WHEN weight/height^2*100 <=.30 THEN '.25-.30'
+    WHEN weight/height^2*100 >.30 THEN '>.30'
+    -- Add ELSE statement to output 'no weight recorded'
+    ELSE 'no weight recorded'
+    END AS bmi_bucket,
+    COUNT(DISTINCT athlete_id) AS athletes
+FROM summer_games AS s
+JOIN athletes AS a
+ON s.athlete_id = a.id
+GROUP BY sport, bmi_bucket
+ORDER BY sport, athletes DESC;
 
 
 
+						--Filtering with a JOIN
+/*
+When adding a filter to a query that requires you to reference a separate table, there are different approaches you can take. 
+One option is to JOIN to the new table and then add a basic WHERE statement.
 
+Your goal is to create a report with the following characteristics:
+
+First column is bronze_medals, or the total number of bronze.
+Second column is silver_medals, or the total number of silver.
+Third column is gold_medals, or the total number of gold.
+Only summer_games are included.
+Report is filtered to only include athletes age 16 or under.
+
+In this exercise, use the JOIN approach.
+*/
+
+--Create a query that pulls total bronze_medals, silver_medals, and gold_medals from summer_games.
+--Use a JOIN and a WHERE statement to filter for athletes ages 16 and below.
 
 
 
