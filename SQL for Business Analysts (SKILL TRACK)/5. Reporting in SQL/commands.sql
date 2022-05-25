@@ -246,9 +246,47 @@ ORDER BY gold_medals DESC;
 
 							--Chapter 2: Creating Reports
 
-				--
+				--Planning the SELECT statement
+/*
+When setting up queries, it is important to use the correct aggregations for fields. A common mistake is to incorrectly set up a ratio. In this exercise, 
+your goal is to create a report that shows the ratio of nobel_prize_winners and pop_in_millions.
 
+Which of the following SELECT statements would sufficiently create this report?
 
+Ans: SELECT SUM(nobel_prize_winners)/SUM(pop_in_millions)
+*/
+
+				--Planning the filter
+/*
+Your boss is looking to see which winter events include athletes over the age of 40. To answer this, you need a report that lists out all events that satisfy
+this condition. In order to have a correct list, you will need to leverage a filter. In this exercise, you will decide which filter option to use.
+*/
+
+--1 Create a query that shows all unique event names in the winter_games table.
+
+SELECT distinct event
+FROM winter_games;
+
+--2 Which of the following approaches will not work to filter this list for events that have athletes over the age of 40?
+
+--Ans: JOIN to athletes and add a HAVING AVG(age) > 40.
+
+				--JOIN then UNION query
+/*
+Your goal is to create a report with the following fields:
+
+season, which outputs either summer or winter
+country
+events, which shows the unique number of events
+There are multiple ways to create this report. In this exercise, create the report by using the JOIN first, UNION second approach.
+
+As always, feel free to reference your E:R Diagram to identify relevant fields and tables.
+
+*/
+--Setup a query that shows unique events by country and season for summer events.
+--Setup a similar query that shows unique events by country and season for winter events.
+--Combine the two queries using a UNION ALL.
+--Sort the report by events in descending order.
 
 
 
