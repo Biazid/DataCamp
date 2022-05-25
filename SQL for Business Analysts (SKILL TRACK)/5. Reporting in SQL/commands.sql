@@ -718,7 +718,20 @@ GROUP BY year
 ORDER BY year DESC;
 
 
-					--
+					--String functions
+/*
+There are a number of string functions that can be used to alter strings. A description of a few of these functions are shown below:
+
+The LOWER(fieldName) function changes the case of all characters in fieldName to lower case.
+The INITCAP(fieldName) function changes the case of all characters in fieldName to proper case.
+The LEFT(fieldName,N) function returns the left N characters of the string fieldName.
+The SUBSTRING(fieldName from S for N) returns N characters starting from position S of the string fieldName. Note that both from S and for N are optional.
+*/
+
+--1 Update the field country_altered to output country in all lower-case.
+
+
+
 
 
 
