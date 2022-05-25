@@ -359,11 +359,52 @@ ORDER BY events DESC;
 
 
 
-						--
+						--CASE statement refresher
+/*
+CASE statements are useful for grouping values into different buckets based on conditions you specify. 
+Any row that fails to satisfy any condition will fall to the ELSE statement (or show as null if no ELSE statement exists).
 
+In this exercise, your goal is to create the segment field that buckets an athlete into one of three segments:
 
+-Tall Female, which represents a female that is at least 175 centimeters tall.
+-Tall Male, which represents a male that is at least 190 centimeters tall.
+-Other
 
+Each segment will need to reference the fields height and gender from the athletes table. Leverage CASE statements and conditional logic (such as AND/OR) to build this
 
+Remember that each line of a case statement looks like this: CASE WHEN {condition} THEN {output}
+*/
+
+--Update the CASE statement to output three values: Tall Female, Tall Male, and Other.
+
+SELECT 
+	name,
+    -- Output 'Tall Female', 'Tall Male', or 'Other'
+	CASE WHEN gender='F' AND height>=175 THEN 'Tall Female'
+    WHEN gender='M' AND height>=190 THEN 'Tall Male'
+    ELSE 'Other' 
+    END AS segment
+FROM athletes;
+
+	
+				--BMI bucket by sport
+/*
+You are looking to understand how BMI differs by each summer sport. To answer this, set up a report that contains the following:
+
+-sport, which is the name of the summer sport
+-bmi_bucket, which splits up BMI into three groups: <.25, .25-.30, >.30
+-athletes, or the unique number of athletes
+
+Definition: BMI = 100 * weight / (height squared).
+
+Also note that CASE statements run row-by-row, so the second conditional is only applied if the first conditional is false. 
+This makes it that you do not need an AND statement excluding already-mentioned conditionals.
+*/
+
+--Build a query that pulls from summer_games and athletes to show sport, bmi_bucket, and athletes.
+--Without using AND or ELSE, set up a CASE statement that splits bmi_bucket into three groups: '<.25', '.25-.30', and '>.30'.
+--Group by the non-aggregated fields.
+--Order the report by sport and then athletes in descending order.
 
 
 
