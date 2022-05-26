@@ -854,7 +854,54 @@ GROUP BY event_fixed;
 
 
 
-						--
+					--Filtering out nulls
+/*
+One way to deal with nulls is to simply filter them out. There are two important conditionals related to nulls:
+
+IS NULL is true for any value that is null.
+IS NOT NULL is true for any value that is not null. Note that a zero or a blank cell is not the same as a null.
+
+These conditionals can be leveraged by several clauses, such as CASE statements, WHERE statements, and HAVING statements. 
+In this exercise, you will learn how to filter out nulls using two separate techniques.
+*/
+
+--1 Setup a query that pulls country and total golds as gold_medals for all winter games.
+--Group by the non-aggregated field and order by gold_medals in descending order.
+
+-- Show total gold_medals by country
+SELECT 
+	country,
+    sum(gold) AS gold_medals
+FROM winter_games AS w
+JOIN countries AS c
+ON c.id=w.country_id
+GROUP BY country
+-- Order by gold_medals in descending order
+ORDER BY gold_medals DESC;
+
+--2 Notice how null values appear at the top of the results. Remove these by adding a WHERE statement that filters out all rows with null gold values.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
