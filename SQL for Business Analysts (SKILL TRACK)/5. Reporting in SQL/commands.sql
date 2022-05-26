@@ -969,11 +969,68 @@ GROUP BY athlete_id
 ORDER BY total_events DESC, athlete_id;
 
 
-					--
+					--Identifying duplication
+/*
+Duplication can happen for a number of reasons, often in unexpected ways. 
+Because of this, it's important to get in the habit of validating your queries to ensure no duplication exists. To validate a query, take the following steps:
+
+1 Check the total value of a metric from the original table.
+2 Compare that with the total value of the same metric in your final report.
+
+If the number from step 2 is larger than step 1, then duplication is likely the culprit. 
+In this exercise, you will go through these steps to identify if duplication exists.
+*/
+--1 Setup a query that pulls total gold_medals from the winter_games table.
+
+SELECT sum(gold) AS gold_medals
+FROM winter_games;
+
+--2 Comment out the top query after noting the gold_medals value.
+--Build a query that shows gold_medals and avg_gdp by country_id, but joins winter_games and country_stats only on the country_id fields.
+
+SELECT 
+	w.country_id, 
+    sum(gold) AS gold_medals, 
+    avg(gdp) AS avg_gdp
+FROM winter_games AS w
+JOIN country_stats AS c
+-- Only join on the country_id fields
+ON c.country_id=w.country_id
+GROUP BY w.country_id;
 
 
+--3 Wrap your newest query in a subquery, alias as subquery, and calculate the total value for the gold_medals field.
 
+-- Comment out the query after noting the gold medal count
+/*SELECT SUM(gold) AS gold_medals
+FROM winter_games;*/
+-- TOTAL GOLD MEDALS: 47 
 
+-- Calculate the total gold_medals in your query
+SELECT sum(gold_medals)
+FROM
+	(SELECT 
+        w.country_id, 
+     	SUM(gold) AS gold_medals, 
+        AVG(gdp) AS avg_gdp
+    FROM winter_games AS w
+    JOIN country_stats AS c
+    ON c.country_id = w.country_id
+    -- Alias your query as subquery
+    GROUP BY w.country_id) AS subquery;
+    
+    
+    					--Fixing duplication through a JOIN
+/*
+n the previous exercise, you set up a query that contained duplication. This exercise will remove the duplication. 
+One approach to removing duplication is to change the JOIN logic by adding another field to the ON statement.
+
+The final query from last exercise is shown in the console. Your job is to fix the duplication by updating the ON statement. 
+Note that the total gold_medals value should be 47.
+*/
+
+--Update the ON statement in the subquery by adding a second field to JOIN on.
+--If an error occurs related to the new JOIN field, use a CAST() statement to fix it.
 
 
 
