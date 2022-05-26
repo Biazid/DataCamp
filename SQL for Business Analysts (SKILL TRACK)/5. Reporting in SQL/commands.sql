@@ -927,6 +927,32 @@ This exercise will walk you through why null values can throw off calculations a
 
 --1 Build a report that shows total_events and gold_medals by athlete_id for all summer events, ordered by total_events descending then athlete_id ascending.
 
+-- Pull events and golds by athlete_id for summer events
+SELECT 
+    athlete_id,
+    count(event) AS total_events, 
+    sum(gold) AS gold_medals
+FROM summer_games
+GROUP BY athlete_id
+-- Order by total_events descending and athlete_id ascending
+ORDER BY total_events desc, athlete_id asc;
+
+--2 Create a field called avg_golds that averages the gold field.
+
+-- Pull events and golds by athlete_id for summer events
+SELECT 
+    athlete_id, 
+    -- Add a field that averages the existing gold field
+    avg(gold) AS avg_golds,
+    COUNT(event) AS total_events, 
+    SUM(gold) AS gold_medals
+FROM summer_games
+GROUP BY athlete_id
+-- Order by total_events descending and athlete_id ascending
+ORDER BY total_events DESC, athlete_id;
+
+--3 If the report was accurate, what should the first three values of avg_golds be?
+--Ans: 
 
 
 
