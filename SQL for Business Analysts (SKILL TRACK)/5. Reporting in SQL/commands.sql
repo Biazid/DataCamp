@@ -881,6 +881,51 @@ ORDER BY gold_medals DESC;
 
 --2 Notice how null values appear at the top of the results. Remove these by adding a WHERE statement that filters out all rows with null gold values.
 
+-- Show total gold_medals by country
+SELECT 
+	country, 
+    SUM(gold) AS gold_medals
+FROM winter_games AS w
+JOIN countries AS c
+ON w.country_id = c.id
+-- Removes any row with no gold medals
+WHERE w.gold is not null
+GROUP BY country
+-- Order by gold_medals in descending order
+ORDER BY gold_medals DESC;
+
+
+--3 We can do a similar filter using HAVING. Comment out the WHERE statement and add a HAVING statement that filters out countries with no gold medals.
+
+-- Show total gold_medals by country
+SELECT 
+	country, 
+    SUM(gold) AS gold_medals
+FROM winter_games AS w
+JOIN countries AS c
+ON w.country_id = c.id
+-- Comment out the WHERE statement
+--WHERE gold IS NOT NULL
+GROUP BY country, w.gold
+-- Replace WHERE statement with equivalent HAVING statement
+HAVING w.gold is not NULL
+-- Order by gold_medals in descending order
+ORDER BY gold_medals DESC;
+
+
+
+				-- Fixing calculations with coalesce
+/*
+Null values impact aggregations in a number of ways. One issue is related to the AVG() function. By default, the AVG() function does not take into account 
+any null values. However, there may be times when you want to include these null values in the calculation as zeros.
+
+To replace null values with a string or a number, use the COALESCE() function. Syntax is COALESCE(fieldName,replacement), where replacement is what 
+should replace all null instances of fieldName.
+
+This exercise will walk you through why null values can throw off calculations and how to troubleshoot these issues.
+*/
+
+--1 Build a report that shows total_events and gold_medals by athlete_id for all summer events, ordered by total_events descending then athlete_id ascending.
 
 
 
