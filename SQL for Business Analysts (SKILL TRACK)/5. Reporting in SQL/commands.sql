@@ -952,7 +952,24 @@ GROUP BY athlete_id
 ORDER BY total_events DESC, athlete_id;
 
 --3 If the report was accurate, what should the first three values of avg_golds be?
---Ans: 
+--Ans: [0, 0, .125]
+
+--4 Fix the avg_golds field by replacing null values with zero.
+
+-- Pull events and golds by athlete_id for summer events
+SELECT 
+    athlete_id, 
+    -- Replace all null gold values with 0
+    AVG(COALESCE(gold,0)) AS avg_golds,
+    COUNT(event) AS total_events, 
+    SUM(gold) AS gold_medals
+FROM summer_games
+GROUP BY athlete_id
+-- Order by total_events descending and athlete_id ascending
+ORDER BY total_events DESC, athlete_id;
+
+
+					--
 
 
 
