@@ -1032,6 +1032,67 @@ Note that the total gold_medals value should be 47.
 --Update the ON statement in the subquery by adding a second field to JOIN on.
 --If an error occurs related to the new JOIN field, use a CAST() statement to fix it.
 
+SELECT SUM(gold_medals) AS gold_medals
+FROM
+	(SELECT 
+     	w.country_id, 
+     	SUM(gold) AS gold_medals, 
+     	AVG(gdp) AS avg_gdp
+    FROM winter_games AS w
+    JOIN country_stats AS c
+    -- Update the subquery to join on a second field
+    ON c.country_id = w.country_id AND w.year=CAST(c.year AS DATE)
+    GROUP BY w.country_id) AS subquery;
+    
+    
+    
+    					--Report 3: Countries with high medal rates
+/*
+Great work so far! It is time to use the concepts you learned in this chapter to build the next base report for your dashboard.
+
+Details for report 3: medals vs population rate.
+
+Column 1 should be country_code, which is an altered version of the country field.
+Column 2 should be pop_in_millions, representing the population of the country (in millions).
+Column 3 should be medals, representing the total number of medals.
+Column 4 should be medals_per_million, which equals medals / pop_in_millions
+*/
+
+--1 Pull total medals by country for all summer games, where the medals field uses one SUM function and several null-handling functions on the gold, silver,
+--and bronze fields.
+
+SELECT 
+	c.country,
+    -- Add the three medal fields using one sum function
+	SUM(COALESCE(bronze,0)+COALESCE(silver,0)+COALESCE(gold,0)) AS medals
+FROM summer_games AS s
+JOIN countries AS c
+ON c.id=s.country_id
+GROUP BY country
+ORDER BY medals DESC;
+
+--2 Join to country_stats to pull in pop_in_millions, then create medals_per_million by dividing total medals by pop_in_millions and converting data types as needed.
+
+SELECT 
+	c.country,
+    -- Pull in pop_in_millions and medals_per_million 
+    pop_in_millions,
+    -- Add the three medal fields using one sum function
+	SUM(COALESCE(bronze,0) + COALESCE(silver,0) + COALESCE(gold,0)) AS medals,
+    SUM(COALESCE(bronze,0) + COALESCE(silver,0) + COALESCE(gold,0))/CAST(pop_in_millions AS NUMERIC) AS medals_per_million
+FROM summer_games AS s
+JOIN countries AS c
+ON s.country_id = c.id
+-- Add a join
+JOIN country_stats AS cs
+ON cs.country_id= s.country_id 
+GROUP BY c.country, pop_in_millions
+ORDER BY medals DESC;
+
+
+--3 Notice the repeated values in the results. Add a column on the newest join statement to remove this duplication, 
+--and if you run into an error when trying to join, update the query so both fields are stored as type date.
+
 
 
 
