@@ -1459,8 +1459,55 @@ GROUP BY region, country
 ORDER BY gdp_per_million DESC;
 
 
---3 
+--3 Add the performance_index that divides the gdp_per_million calculation by the gdp_per_million_total calculation.
 
+-- Bring in region, country, and gdp_per_million
+SELECT 
+    region,
+    country,
+    SUM(gdp) / SUM(pop_in_millions) AS gdp_per_million,
+    -- Output the worlds gdp_per_million
+    SUM(SUM(gdp)) OVER () / SUM(SUM(pop_in_millions)) OVER () AS gdp_per_million_total,
+    -- Build the performance_index in the 3 lines below
+    (SUM(gdp) / SUM(pop_in_millions) )
+    /
+    (SUM(SUM(gdp)) OVER () / SUM(SUM(pop_in_millions)) OVER ()) AS performance_index
+-- Pull from country_stats_clean
+FROM country_stats_clean AS cs
+JOIN countries AS c 
+ON cs.country_id = c.id
+-- Filter for 2016 and remove null gdp values
+WHERE year = '2016-01-01' AND gdp IS NOT NULL
+GROUP BY region, country
+-- Show highest gdp_per_million at the top
+ORDER BY gdp_per_million DESC;
+
+
+
+						--Month-over-month comparison
+/*
+In order to compare months, you need to use one of the following window functions:
+
+*LAG(value, offset), which outputs a value from an offset number previous to to the current row in the report.
+*LEAD(value, offset), which outputs a value from a offset number after the current row in the report.
+
+Your goal is to build a report that shows each country's month-over-month views. A few tips:
+
+*You will need to bucket dates into months. To do this, you can use the DATE_PART() function.
+*You can calculate the percent change using the following formula: (value)/(previous_value) - 1.
+
+If no offset value is included in the LAG() or LEAD() functions, it will default to 1.
+Since the table stops in the middle of June, the query is set up to only include data to the end of May.
+*/
+
+--From web_data, pull in country_id and use a DATE_PART() function to create month.
+
+--Create month_views that pulls the total views within the month.
+
+--Create previous_month_views that pulls the total views from last month for the given country.
+
+--Create the field perc_change that calculates the percent change of this month relative to last month for the given country, 
+  --where a negative value represents a loss in views and a positive value represents growth.
 
 
 
