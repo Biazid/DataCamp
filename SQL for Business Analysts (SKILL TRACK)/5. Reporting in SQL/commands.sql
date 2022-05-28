@@ -1297,13 +1297,169 @@ FROM
 WHERE row_num = 1;
 
 
-					--
+
+					--Volume vs efficiency metrics
+/*
+The two types of metrics are volume metrics, which scales with size, and efficiency metrics, which can compare across groups regardless of the size of each group.
+
+Which of the following is an efficiency metric?
+
+Ans: Athletes per event
+*/
+
+					--Percent of gdp per country
+/*
+A percent of total calculation is a good way to compare volume metrics across groups. While simply showing the volume metric in a report provides some insights, 
+adding a ratio allows us to easily compare values quickly.
+
+To run a percent of total calculation, take the following steps:
+
+Create a window function that outputs the total volume, partitioned by whatever is considered the total. If the entire table is considered the total,
+then no partition clause is needed.
+
+Run a ratio that divides each row's volume metric by the total volume in the partition.
+
+In this exercise, you will calculate the percent of gdp for each country relative to the entire world and relative to that country's region.
+*/
+
+--1  Construct a query that pulls the country_gdp by region and country, order the query to show the highest country_gdp at the top,
+-- and then filter out all null gdp values.
 
 
+-- Pull country_gdp by region and country
+SELECT 
+	region,
+    country,
+	SUM(gdp) AS country_gdp
+FROM country_stats AS cs
+JOIN countries AS c
+ON cs.country_id = c.id
+-- Filter out null gdp values
+WHERE gdp IS NOT NULL
+GROUP BY region, country
+-- Show the highest country_gdp at the top
+ORDER BY country_gdp DESC;
 
 
+--2 Add the field global_gdp that outputs the total gdp across all countries.
+
+-- Pull country_gdp by region and country
+SELECT 
+	region,
+    country,
+	SUM(gdp) AS country_gdp,
+    -- Calculate the global gdp
+    SUM(SUM(gdp)) OVER () AS global_gdp
+FROM country_stats AS cs
+JOIN countries AS c
+ON cs.country_id = c.id
+-- Filter out null gdp values
+WHERE gdp IS NOT NULL
+GROUP BY region, country
+-- Show the highest country_gdp at the top
+ORDER BY country_gdp DESC;
 
 
+--3 Create the field perc_global_gdp that calculates the percent of global gdp for the given country.
+
+-- Pull country_gdp by region and country
+SELECT 
+	region,
+    country,
+	SUM(gdp) AS country_gdp,
+    -- Calculate the global gdp
+    SUM(SUM(gdp)) OVER () AS global_gdp,
+    -- Calculate percent of global gdp
+    SUM(gdp) / SUM(SUM(gdp)) OVER () AS perc_global_gdp
+FROM country_stats AS cs
+JOIN countries AS c
+ON cs.country_id = c.id
+-- Filter out null gdp values
+WHERE gdp IS NOT NULL
+GROUP BY region, country
+-- Show the highest country_gdp at the top
+ORDER BY country_gdp DESC;
+
+
+--4 Add the field perc_region_gdp, which runs the same calculation as perc_global_gdp but relative to each region.
+
+-- Pull country_gdp by region and country
+SELECT 
+	region,
+    country,
+	SUM(gdp) AS country_gdp,
+    -- Calculate the global gdp
+    SUM(SUM(gdp)) OVER () AS global_gdp,
+    -- Calculate percent of global gdp
+    SUM(gdp) / SUM(SUM(gdp)) OVER () AS perc_global_gdp,
+    -- Calculate percent of gdp relative to its region
+    SUM(gdp) / SUM(SUM(gdp)) OVER (PARTITION BY region) AS perc_region_gdp
+FROM country_stats AS cs
+JOIN countries AS c
+ON cs.country_id = c.id
+-- Filter out null gdp values
+WHERE gdp IS NOT NULL
+GROUP BY region, country
+-- Show the highest country_gdp at the top
+ORDER BY country_gdp DESC;
+
+
+					--GDP per capita performance index
+/*
+A performance index calculation is a good way to compare efficiency metrics across groups. A performance index compares each row to a benchmark.
+
+To run a performance index calculation, take the following steps:
+
+1 Create a window function that outputs the performance for the entire partition.
+2 Run a ratio that divides each row's performance to the performance of the entire partition.
+In this exercise, you will calculate the gdp_per_million for each country relative to the entire world.
+
+gdp_per_million = gdp / pop_in_millions
+
+You will reference the country_stats_cleaned table, which is a copy of country_stats without data type issues.
+*/
+
+--1 Update the query to pull gdp_per_million by region and country from country_stats_clean.
+-- Filter for the year 2016, order by gdp_per_million in descending order, and remove all null gdp values.
+
+
+-- Bring in region, country, and gdp_per_million
+SELECT 
+    region,
+    country,
+    SUM(gdp) / SUM(pop_in_millions) AS gdp_per_million
+-- Pull from country_stats_clean
+FROM country_stats_clean AS cs
+JOIN countries AS c 
+ON cs.country_id = c.id
+-- Filter for 2016 and remove null gdp values
+WHERE year = '2016-01-01' AND gdp IS NOT NULL
+GROUP BY region, country
+-- Show highest gdp_per_million at the top
+ORDER BY gdp_per_million DESC;
+
+
+--2 Add the field gdp_per_million_total that takes the total gdp_per_million for the entire world.
+
+-- Bring in region, country, and gdp_per_million
+SELECT 
+    region,
+    country,
+    SUM(gdp) / SUM(pop_in_millions) AS gdp_per_million,
+    -- Output the worlds gdp_per_million
+    SUM(SUM(gdp)) OVER () / SUM(SUM(pop_in_millions)) OVER () AS gdp_per_million_total
+-- Pull from country_stats_clean
+FROM country_stats_clean AS cs
+JOIN countries AS c 
+ON cs.country_id = c.id
+-- Filter for 2016 and remove null gdp values
+WHERE year = '2016-01-01' AND gdp IS NOT NULL
+GROUP BY region, country
+-- Show highest gdp_per_million at the top
+ORDER BY gdp_per_million DESC;
+
+
+--3 
 
 
 
