@@ -221,7 +221,99 @@ WHERE S1.statistician_name <> S2.statistician_name
 	OR S1.statistician_surname <> S2.statistician_surname
 	
 	
-					--
+					--Removing missing values
+/*
+It is common to find missing values in your data. SQL Server represents missing values with NULL.
+
+IS NULL and IS NOT NULL enable you to select or remove the rows where missing values are represented by NULL.
+
+The airport_city column of the airports table has some NULL values. Try to find them!
+*/
+--1 Use IS NOT NULL to return all the rows from the airports table where airport_city is not missing.
+
+SELECT *
+-- Select the appropriate table
+FROM airports
+-- Exclude the rows where airport_city is NULL
+WHERE airport_city IS NOT NULL
+
+--2 Now, use IS NULL to return all the rows from the airports table where airport_city is missing.
+
+SELECT *
+-- Select the appropriate table
+FROM airports
+-- Return only the rows where airport_city is NULL
+WHERE airport_city IS NULL
+
+					--Removing blank spaces
+/*
+You can also find missing data represented with blank spaces ''.
+
+The comparison operators = and <> can help you to select or remove the rows when missing values are represented with blank spaces ''.
+
+The airport_city column of the airports table has some blank spaces. Try to find them!
+*/
+
+--1 Use <> to return all the rows from the airports table where airport_city is not missing.
+
+SELECT *
+-- Select the appropriate table
+FROM airports
+-- Exclude the rows where airport_city is missing
+WHERE airport_city <> ''
+
+--2  SELECT *
+-- Select the appropriate table
+FROM airports
+-- Return only the rows where airport_city is missing
+WHERE airport_city = ''
+
+
+					--Filling missing values using ISNULL()
+/*
+In the previous exercise, you practiced how to exclude and select the rows with NULL values. 
+However, depending on the business assumptions behind your data, you may want to select all the rows with NULL values, 
+but replacing these NULL values with another value. You can do it using ISNULL().
+
+Now, you want to replace all the NULL values for the airport_city and airport_state columns with the word 'Unknown', using ISNULL().
+*/
+
+--Replace the missing values for airport_city column with the 'Unknown' string.
+--Replace the missing values for airport_state column with the 'Unknown' string.
+
+SELECT
+  airport_code,
+  airport_name,
+  -- Replace missing values for airport_city with 'Unknown'
+  ISNULL(airport_city, 'Unknown') AS airport_city,
+  -- Replace missing values for airport_state with 'Unknown'
+  ISNULL(airport_state, 'Unknown') AS airport_state
+FROM airports
+
+				--Filling missing values using COALESCE()
+/*
+In the previous exercise, you used the ISNULL() function to replace the NULL values of a column with another value.
+
+Now, you want to create a new column, location, that returns the values of the airport_city column, and in case it has NULL values, 
+return the value of airport_state. Finally, if airport_state is also NULL, you want to return the string 'Unknown'.
+
+To do it, you can use COALESCE(), that evaluates the arguments between parenthesis and returns the first argument that is not NULL.
+*/
+--Use COALESCE() to return the first non NULL value of airport_city, airport_state, or 'Unknown'.
+
+SELECT
+airport_code,
+airport_name,
+-- Replace the missing values
+COALESCE(airport_city, airport_state, 'Unknown') AS location
+FROM airports
+
+
+				--
+
+
+
+
 
 
 
