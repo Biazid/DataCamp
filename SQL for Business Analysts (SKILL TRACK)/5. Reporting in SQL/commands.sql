@@ -1136,8 +1136,76 @@ LIMIT 25;
 							
 							
 							--Chapter 4: Complex Calculations
-					--
+					--Testing out window functions
+/*
+Window functions reference other rows within the report. There are a variety of window-specific functions to use, 
+but all basic aggregation functions can be used as a window function. These include:
 
+SUM()
+AVG()
+MAX()
+MIN()
+The syntax of a window function is FUNCTION(value) OVER (PARTITION BY field ORDER BY field). Note that the PARTITION BY and ORDER BY clauses are optional. 
+The FUNCTION should be replaced with the function of your choice.
+
+In this exercise, you will run a few different window functions on the country_stats table.
+*/
+
+--1 Add the field country_avg_gdp that outputs the average gdp for each country.
+
+SELECT 
+	country_id,
+    year,
+    gdp,
+    -- Show the average gdp across all years per country
+	AVG(gdp) OVER (PARTITION BY country_id) AS country_avg_gdp
+FROM country_stats;
+
+--2 Change country_avg_gdp to country_sum_gdp that shows the total gdp for each country across all years.
+
+SELECT 
+	country_id,
+    year,
+    gdp,
+    -- Show max gdp per country and alias accordingly
+	SUM(gdp) OVER (PARTITION BY country_id) AS country_sum_gdp
+FROM country_stats;
+
+--3 Change country_sum_gdp to country_max_gdp that shows the highest GDP for each country.
+
+SELECT 
+	country_id,
+    year,
+    gdp,
+    -- Show max gdp per country and alias accordingly
+	MAX(gdp) OVER (PARTITION BY country_id) AS country_max_gdp
+FROM country_stats;
+
+--4 Change country_max_gdp to global_max_gdp that shows the highest GDP value for the entire world.
+
+
+SELECT 
+	country_id,
+    year,
+    gdp,
+    -- Show max gdp for the table and alias accordingly
+	MAX(gdp) OVER () AS global_max_gdp
+FROM country_stats;
+
+
+
+				--Average total country medals by region
+/*
+Layered calculations are when you create a basic query with an aggregation, then reference that query as a subquery to run an additional calculation.
+This approach allows you to run aggregations on aggregations, such as a MAX() of a COUNT() or an AVG() of a SUM().
+
+In this exercise, your task is to pull the average total_golds for all countries within each region. This report will apply only for summer events.
+
+To avoid having to deal with null handling, we have created a summer_games_clean table. Please use this when building the report.
+*/
+
+--1 Set up a query that pulls total_golds by region and country_id from the summer_games_clean and countries tables.
+--GROUP BY the unaggregated fields.
 
 
 
