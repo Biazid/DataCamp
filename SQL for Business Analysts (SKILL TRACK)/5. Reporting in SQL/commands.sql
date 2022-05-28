@@ -1208,15 +1208,96 @@ To avoid having to deal with null handling, we have created a summer_games_clean
 --GROUP BY the unaggregated fields.
 
 
+-- Query total_golds by region and country_id
+SELECT 
+	region, 
+    country_id, 
+    SUM(gold) AS total_golds
+FROM summer_games_clean AS s
+JOIN countries AS c
+ON s.country_id=c.id
+GROUP BY region, country_id;
+
+--2 Alias your query as subquery and add a layer that pulls region and avg_total_golds that outputs the average gold medal count for all countries in the region.
+--Order by avg_total_golds in descending order.
+
+
+SELECT 
+	region,
+  AVG(total_golds) AS avg_total_golds
+FROM
+  (SELECT 
+      region, 
+      country_id, 
+      SUM(gold) AS total_golds
+  FROM summer_games_clean AS s
+  JOIN countries AS c
+  ON s.country_id = c.id
+  GROUP BY region, country_id) AS subquery
+GROUP BY region
+ORDER BY avg_total_golds DESC;
+
+
+				--Most decorated athlete per region
+/*
+Your goal for this exercise is to show the most decorated athlete per region. To set up this report, you need to leverage the ROW_NUMBER() window function, 
+which numbers each row as an incremental integer, where the first row is 1, the second is 2, and so on.
+
+Syntax for this window function is ROW_NUMBER() OVER (PARTITION BY field ORDER BY field). Notice how there is no argument within the initial function.
+
+When set up correctly, a row_num = 1 represents the most decorated athlete within that region. 
+Note that you cannot use a window calculation within a HAVING or WHERE statement, so you will need to use a subquery to filter.
+
+Feel free to reference the E:R Diagram. We will use summer_games_clean to avoid null handling.
+*/
+
+--1 Build a query that pulls region, athlete_name, and total_golds by joining summer_games_clean, athletes, and countries.
+--Add a field called row_num that uses ROW_NUMBER() to assign a regional rank to each athlete based on total golds won.
+
+SELECT 
+	-- Query region, athlete_name, and total gold medals
+	region, 
+    name AS athlete_name, 
+    SUM(gold) AS total_golds,
+    -- Assign a regional rank to each athlete
+    ROW_NUMBER() OVER (PARTITION BY region ORDER BY SUM(gold) DESC) AS row_num
+FROM summer_games_clean AS s
+JOIN athletes AS a
+ON a.id = s.athlete_id
+JOIN countries AS c
+ON c.id=s.country_id
+GROUP BY region,athlete_name;
 
 
 
+--2 Alias the subquery as subquery.
+-- Query region, athlete_name, and total_golds, and then filter for only the top athlete per region.
+
+-- Query region, athlete name, and total_golds
+SELECT 
+	region,
+    athlete_name,
+    total_golds
+FROM
+    (SELECT 
+		-- Query region, athlete_name, and total gold medals
+        region, 
+        name AS athlete_name, 
+        SUM(gold) AS total_golds,
+        -- Assign a regional rank to each athlete
+        ROW_NUMBER() OVER (PARTITION BY region ORDER BY SUM(gold) DESC) AS row_num
+    FROM summer_games_clean AS s
+    JOIN athletes AS a
+    ON a.id = s.athlete_id
+    JOIN countries AS c
+    ON s.country_id = c.id
+    -- Alias as subquery
+    GROUP BY region, athlete_name) AS subquery
+-- Filter for only the top athlete per region
+WHERE row_num = 1;
 
 
-
-
-
-
+					--
 
 
 
