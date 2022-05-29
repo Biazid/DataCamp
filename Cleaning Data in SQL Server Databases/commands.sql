@@ -471,8 +471,230 @@ Ans: FORMAT() is more flexible, but it is not recommended for high volumes of da
 */
 
 
-							--Chapter 3: Dealing with out of range values, different data types, and pattern matching
-					--
+						--Chapter 3: Dealing with out of range values, different data types, and pattern matching
+				--Out of range values or inaccurate data?
+/*
+In this lesson, you learned the concepts of out of range values and inaccurate data.
+
+Which of the following features about them is true?
+
+1. Out of range values are values that are outside the expected range of valid data. For example, the color of the car of a person who doesn't have a car.
+
+2. Inaccurate data happens when two or more values are contradictory. For example, a person who is 400 inches tall.
+
+3. None of the above. (ANS)
+*/
+
+				--Detecting out of range values
+/*
+Sometimes you can find out of range values in your data. If you don't detect them before analyzing, they can disrupt your results.
+
+The logical operator BETWEEN, and the comparison operators > and <, can help you to detect the rows with out of range values.
+
+The num_ratings column of the series table stores the number of ratings each series has received. The total amount of people surveyed is 5000. However, 
+this column has some out of range values, i.e., there are values greater than 5000 or smaller than 0.
+*/
+--1 Find rows in series where num_ratings is not between 0 and 5000.
+
+SELECT * FROM series
+-- Detect the out of range values
+WHERE num_ratings NOT BETWEEN 0 AND 5000
+
+--2 Similarly, use < and > to detect the rows from the series table where num_ratings is not between 0 and 5000.
+
+SELECT * FROM series
+-- Detect the out of range values
+WHERE num_ratings < 0 OR num_ratings > 5000
+
+
+					--Excluding out of range values
+/*
+In the previous exercise, you detected the rows with a number of ratings that were out of range.
+
+The logical operator BETWEEN, and the comparison operators >, <, and =, can help you to exclude the rows with out of range values.
+
+This time, you want to get all the rows from the series table, ranging from 0 to 5000.
+*/
+--1 Use BETWEEN to detect all the rows from the series table where num_ratings is a value ranging from 0 to 5000.
+
+SELECT * FROM series
+-- Exclude the out of range values
+WHERE num_ratings BETWEEN 0 AND 5000
+
+--2 Similarly, use <, >, and = to detect the rows from the series table where num_ratings is between 0 and 5000.
+
+SELECT * FROM series
+-- Exclude the out of range values
+WHERE num_ratings >= 0 AND num_ratings <= 5000
+
+
+				--Detecting and excluding inaccurate data
+/*
+In this lesson, you also learned that if you don't detect inaccurate data before analyzing, this data can disrupt your results.
+
+The series table has a boolean column named is_adult, that stores whether the series is for adults or not. There is also another column, min_age, 
+that stores the minimum age the audience should have. Unfortunately, there are contradictory values, 
+because some rows with a TRUE value in its is_adult column have a number smaller than 18 in its min_age column.
+
+Can you find these rows with inaccurate data?
+*/
+
+--1 Detect the series with a true value in its is_adult column that have a value smaller than 18 in its min_age column.
+
+SELECT * FROM series
+-- Detect series for adults
+WHERE is_adult = 1
+-- Detect series with the minimum age smaller than 18
+AND min_age < 18
+
+--2 Now exclude the series with a true value in its is_adult column that have a value smaller than 18 in its min_age column.
+
+SELECT * FROM series
+-- Filter series for adults
+WHERE is_adult = 1
+-- Exclude series with the minimum age greater or equals to 18
+AND min_age >= 18
+
+
+				--Using CAST() and CONVERT()
+/*
+In this lesson, you learned that your tables could store data with different types than you want. Sometimes you will need to convert these types to the correct ones to perform the operations you want.
+
+The series table has a column named num_ratings that stores integer numbers, but this time it was designed as VARCHAR(5). You want to calculate the average of the num_ratings column, but you think that this column is an integer number.
+
+You prepare the following query:
+
+SELECT AVG(num_ratings)
+FROM series
+WHERE num_ratings BETWEEN 0 AND 5000
+
+*/
+--1 Run the query given above to check there are errors.
+--Use CAST() to convert the type of num_ratings to integer.
+
+-- Use CAST() to convert the num_ratings column
+SELECT AVG(CAST(num_ratings AS INT))
+FROM series
+-- Use CAST() to convert the num_ratings column
+WHERE CAST(num_ratings AS INT) BETWEEN 0 AND 5000
+
+--2 Now, use CONVERT() instead of CAST() to convert the type of the num_ratings column to integer.
+
+-- Use CONVERT() to convert the num_ratings column
+SELECT AVG(CONVERT(INT, num_ratings))
+FROM series
+-- Use CONVERT() to convert the num_ratings column
+WHERE CONVERT(INT, num_ratings) BETWEEN 0 AND 5000
+
+
+			--The series with most episodes
+/*
+In the episodes table, there is a column named number. It stores the number of each episode within a season for every series. 
+This column was designed as VARCHAR(5), but it actually stores numbers.
+
+Can you guess which is the series with most episodes within a season?
+
+Note: To get the name of the series you will need to perform an INNER JOIN between series and episodes, matching the columns series.id with episodes.series_id.
+
+Ans: Adventure Time
+*/
+
+				--Characters to specify a patterns
+/*
+In this lesson, you learned the different characters we can use to specify patterns.
+
+Which of the following statements about these characters is false?
+
+Ans: [] matches any single character, not within the specified range or set.
+
+*/
+				--Matching urls
+/*
+In this lesson you learned that SQL Server provides the LIKE operator, which determines if a string matches a specified pattern.
+
+You need to verify the URLs of the official sites of every series. You prepare a script that checks every official_site value from the series table to analyze possible wrong URLs.
+
+To make it easier, suppose that the format of the URLs you have to validate must start with 'www.', although we know that there are URLs that have other beginnings.
+
+*/
+
+--Select the URLs of the official sites.
+--Get the URLs that don't match the pattern.
+--Write the pattern.
+
+SELECT 
+	name,
+    -- URL of the official site
+	official_site
+FROM series
+-- Get the URLs that don't match the pattern
+WHERE official_site NOT LIKE 'www.%'
+
+				--Checking phone numbers
+/*
+As you learned in this lesson, the underscore _ symbol matches any single character.
+
+You want to prepare a script that checks every contact_number value from the series table to get those numbers that don't start with three fives followed by a 
+hyphen as such 555-, then three characters followed by another hyphen and finally, another four characters (555-###-####).
+
+Can you find them?
+*/
+--Select the contact number.
+--Get the numbers of contacts that don't match the pattern.
+--Write the pattern that the numbers have to match.
+
+SELECT 
+	name,
+    contact_number
+FROM series
+WHERE contact_number NOT LIKE '555-___-____'	
+
+
+							
+							--Chapter 4: Combining, splitting, and transforming data
+
+					--Combining cities and states using +
+/*
+In this lesson, you learned how to combine columns into one.
+
+The clients table has one column, city, to store the cities where the clients live, and another column, state, to store the state of the city.
+
+| client_id | client_name | client_surname | city      | state    |
+|-----------|-------------|----------------|-----------|----------|
+| 1         | Miriam      | Antona         | Las Vegas | Nevada   |
+| 2         | Astrid      | Harper         | Chicago   | Illinois |
+| 3         | David       | Madden         | Phoenix   | Arizona  |
+| ...       | ...         | ...            | ...       | ...      |
+You need to combine city and state columns into one, to have the following format: 'Las Vegas, Nevada'.
+
+You will use + operator to do it.
+*/
+
+--1 Concatenate the names of the cities with the states using the + operator without worrying about NULL values.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
