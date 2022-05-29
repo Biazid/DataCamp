@@ -221,6 +221,10 @@ WHERE S1.statistician_name <> S2.statistician_name
 	OR S1.statistician_surname <> S2.statistician_surname
 	
 	
+	
+	
+							--Chapter2:  Dealing with missing data, duplicate data, and different date formats
+
 					--Removing missing values
 /*
 It is common to find missing values in your data. SQL Server represents missing values with NULL.
@@ -309,7 +313,173 @@ COALESCE(airport_city, airport_state, 'Unknown') AS location
 FROM airports
 
 
-				--
+				--Diagnosing duplicates
+
+/*
+In this lesson, you learned how to use the ROW_NUMBER() function. ROW_NUMBER() returns a number which begins at 1 for the first row in every partition,
+and provides a sequential number for each row within the same partition.
+
+Considering that the partition for the statistics_flight table is formed by the columns airport_code, carrier_code, and registration_date, 
+can you guess what value will give the ROW_NUMBER() function in the row_num column for the last row?
+
+
+|registration_code|airport_code|carrier_code|registration_date|canceled|on_time|row_num|
+|-----------------|------------|------------|-----------------|--------|-------|-------|
+|000000137        |MSP         |EV          |2014-01-01       |117     |369    |1      |
+|000000138        |MSP         |F9          |2014-01-01       |0       |60     |1      |
+|000000139        |MSP         |FL          |2014-01-01       |8       |83     |1      |
+|000000140        |MSP         |MQ          |2014-01-01       |20      |67     |1      |
+|000000141        |MSP         |OO          |2014-01-01       |76      |1031   |1      |
+|000000142        |MSP         |OO          |2014-01-01       |76      |1031   |2      |
+|000000143        |MSP         |OO          |2014-01-01       |76      |1031   |???????|
+----------------------------------------------------------------------------------------
+
+Ans: 3
+*/
+
+
+						--Treating duplicates
+/*
+In the previous exercise, you reviewed the concept of ROW_NUMBER(). In this exercise, you will use it in your code.
+
+You want to select all the rows from the flight_statistics table that are duplicated. After that, you want to get all the rows without duplicates. 
+You consider that the repeating group for this table is formed by the columns airport_code, carrier_code, and registration_date.
+*/
+
+--1 First of all, apply the ROW_NUMBER() function to the flight_statistics table.
+--Consider that partitions will be formed by the columns airport_code, carrier_code, and registration_date.
+
+
+SELECT *,
+	   -- Apply ROW_NUMBER()
+       ROW_NUMBER() OVER (
+         	-- Write the partition
+            PARTITION BY 
+                airport_code, 
+                carrier_code, 
+                registration_date
+			ORDER BY 
+                airport_code, 
+                carrier_code, 
+                registration_date
+        ) row_num
+FROM flight_statistics
+
+--2 Wrap the previous query with the WITH clause to select the duplicate rows.
+--Get just the duplicate rows comparing row_num with a number.
+
+-- Use the WITH clause
+WITH cte AS (
+    SELECT *, 
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                airport_code, 
+                carrier_code, 
+                registration_date
+			ORDER BY 
+                airport_code, 
+                carrier_code, 
+                registration_date
+        ) row_num
+    FROM flight_statistics
+)
+SELECT * FROM cte
+-- Get only duplicates
+WHERE row_num > 1;
+
+
+--3 Modify the previous query to exclude the duplicate rows by comparing row_num with a number.
+
+WITH cte AS (
+    SELECT *, 
+        ROW_NUMBER() OVER (
+            PARTITION BY 
+                airport_code, 
+                carrier_code, 
+                registration_date
+			ORDER BY 
+                airport_code, 
+                carrier_code, 
+                registration_date
+        ) row_num
+    FROM flight_statistics
+)
+SELECT * FROM cte
+-- Exclude duplicates
+WHERE row_num = 1;
+
+
+
+					--Using CONVERT()
+/*
+The CONVERT() function can help you to convert dates into the desired format.
+
+You need to get a report of the airports, carriers, canceled flights, and registration dates, registered in the first six months of the year 2014. 
+You realize that the format of the registration_date column is yyyy-mm-dd, and you want to show the results in the format of mm/dd/yyyy, which is hardcoded as 101, using the CONVERT() function.
+
+Notice that the type of the registration_date column is VARCHAR(10) and not a date.
+*/
+
+--Convert the type of the registration_date column to DATE and print it in mm/dd/yyyy format.
+--Convert the registration_date column to mm/dd/yyyy format to filter the results.
+--Filter the results for the first six months of 2014 in mm/dd/yyyy format.
+
+SELECT 
+    airport_code,
+    carrier_code,
+    canceled,
+    -- Convert the registration_date to a DATE and print it in mm/dd/yyyy format
+    CONVERT(VARCHAR(10), CAST(registration_date AS DATE), 101) AS registration_date
+FROM flight_statistics 
+-- Convert the registration_date to mm/dd/yyyy format
+WHERE CONVERT(VARCHAR(10), CAST(registration_date AS DATE), 101) 
+	-- Filter the first six months of 2014 in mm/dd/yyyy format 
+	BETWEEN '01/01/2014' AND '06/31/2014'
+
+
+
+				--Using FORMAT()
+/*
+Unlike the CONVERT() function, the FORMAT() function takes in the format as a string as such 'dd/MM/yyyy'.
+
+You need to get a report of all the pilots. You realize that the format of the entry_date column is 'yyyy-MM-dd',
+and you want to show the results in the format of 'dd/MM/yyyy'. As this table contains few data, you think about using the FORMAT() function.
+
+Notice that the type of the entry_date column is VARCHAR(10) and not a date.
+*/
+
+--Convert the type of the entry_date column to DATE and print it in 'dd/MM/yyyy' format.
+
+SELECT 
+	pilot_code,
+	pilot_name,
+	pilot_surname,
+	carrier_code,
+    -- Convert the entry_date to a DATE and print it in dd/MM/yyyy format
+	FORMAT(CAST(entry_date AS DATE), 'dd/MM/yyyy') AS entry_date
+from pilots
+
+
+
+				--CONVERT() vs FORMAT()
+/*
+In this lesson, you learned how to use the CONVERT() and the FORMAT() functions.
+
+Which of the following features about them is true?
+Ans: FORMAT() is more flexible, but it is not recommended for high volumes of data because it is slower.
+
+*/
+
+
+							--Chapter 3: Dealing with out of range values, different data types, and pattern matching
+					--
+
+
+
+
+
+
+
 
 
 
