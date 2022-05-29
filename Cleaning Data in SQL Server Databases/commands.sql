@@ -673,17 +673,143 @@ You will use + operator to do it.
 --1 Concatenate the names of the cities with the states using the + operator without worrying about NULL values.
 
 
+SELECT 
+	client_name,
+	client_surname,
+    -- Concatenate city with state
+    city + ', ' + state AS city_state
+FROM clients
+
+--2 Replace each instance of NULL in city and state with an ISNULL() function, so that if either column has a NULL value, an empty string '' is returned instead.
+
+SELECT 
+	client_name,
+	client_surname,
+    -- Consider the NULL values
+	ISNULL(city, '') + ISNULL(', ' + state, '') AS city_state
+FROM clients
 
 
 
+				--Concatenating cities and states
+/*
+In the previous exercise, you used the + operator to combine two columns into one. This time you need to do the same, but using the CONCAT() function.
+
+To get this format for the concatenation: 'Las Vegas, Nevada', you will need to use the CASE expression in case the state column has NULL values.
+*/
+--Concatenate the names of the cities with the states using the CONCAT() function, 
+--while using a CASE statement that returns '' when state is NULL and performs a normal concatenation otherwise.
+
+SELECT 
+		client_name,
+		client_surname,
+    -- Use the function to concatenate the city and the state
+		CONCAT(
+			city,
+			CASE WHEN state IS NULL THEN '' 
+			ELSE CONCAT(', ', state) END) AS city_state
+FROM clients
 
 
 
+				--Working with DATEFROMPARTS()
+/*
+In this lesson, you also learned how to combine different parts of a date, which are in separate columns into one.
+
+In the paper_shop_daily_sales table, the columns year_of_sale, month_of_sale, and day_of_sale, store the different values of a date.
+
+| product_name | units | year_of_sale | month_of_sale | day_of_sale |
+|--------------|-------|--------------|---------------|-------------|
+| notebooks    | 2     | 2019         | 1             | 1           |
+| notebooks    | 3     | 2019         | 5             | 12          |
+| ...          | ...   | ...          | ...           | ...         |
+---------------------------------------------------------------------
+You need to combine all these columns into one, by using the DATEFROMPARTS() function.
+
+*/
+
+--1 Use the DATEFROMPARTS() to concatenate the different parts of the date.
+
+SELECT 
+	product_name,
+	units,
+    -- Use the function to concatenate the different parts of the date
+	DATEFROMPARTS(
+      	year_of_sale, 
+      	month_of_sale, 
+      	day_of_sale) AS complete_date
+FROM paper_shop_daily_sales
+
+--2 Which of the following statements about DATEFROMPARTS() is true?
+--Ans: If one argument passed to DATEFROMPARTS() has a NULL value, it will return NULL.
+
+
+					--Using SUBSTRING() and CHARINDEX()
+/*
+In this lesson, you learned how to split one column into more columns.
+
+The clients_split table has one column, city_state, that stores the cities where the clients live and the state of the city. 
+The values of this column have this appearance: 'Chicago, Illinois'.
+
+You need to split this column into two new columns, one for the city and the other one for the state.
+You think about using SUBSTRING() in combination with CHARINDEX() and LEN().
+*/
+
+--Extract the name of the city using SUBSTRING() and CHARINDEX().
+--Extract the name of the state using SUBSTRING(), CHARINDEX() and LEN().
+
+SELECT 
+	client_name,
+	client_surname,
+    -- Extract the name of the city
+	SUBSTRING(city_state, 1, CHARINDEX(', ', city_state) - 1) AS city,
+    -- Extract the name of the state
+    SUBSTRING(city_state, CHARINDEX(', ', city_state) + 1, LEN(city_state)) AS state
+FROM clients_split
+
+
+				--Using RIGHT() , LEFT() and REVERSE()
+/*
+In the previous exercise, you used SUBSTRING() and CHARINDEX() to split the city_state column into two new columns.
+
+This time you need to do the same, but using the LEFT(), RIGHT(), and REVERSE() functions.
+*/
+--Extract the name of the city using LEFT() and CHARINDEX().
+--Extract the name of the state using RIGHT(), CHARINDEX() and REVERSE().
+
+
+SELECT
+	client_name,
+	client_surname,
+    -- Extract the name of the city
+	LEFT(city_state, CHARINDEX(', ', city_state) - 1) AS city,
+    -- Extract the name of the state
+    RIGHT(city_state, CHARINDEX(' ,', REVERSE(city_state)) - 1) AS state
+FROM clients_split
 
 
 
+					--SUBSTRING() or CHARINDEX()?
+/*
+In this lesson, you studied how to use the SUBSTRING() and CHARINDEX() functions to split one column into two new columns.
+
+Which of the following statements about these functions is false?
+
+1. SUBSTRING() returns some characters of a string from a start position and gets from that string as many characters as we specify in the length parameter.
+
+2. SUBSTRING() returns the position of a substring in a string. We can optionally determine the position where the search will start.
+
+3. CHARINDEX() returns the position of a substring in a string.
+
+4. We can optionally pass to the CHARINDEX() function a parameter to determine the position where the search will start.
+
+Ans: 2
+
+*/
 
 
+
+					--
 
 
 
