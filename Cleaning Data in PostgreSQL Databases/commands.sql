@@ -56,7 +56,25 @@ In this exercise, you will populate the morning column by matching patterns for 
 --Edit the CASE clause to populate the morning column with 0 (integer without quotes) when the regular expression is not matched.
 
 
-
+SELECT 
+	summons_number, 
+    CASE WHEN 
+    	summons_number IN (
+          SELECT 
+  			summons_number 
+  		  FROM 
+  			parking_violation 
+  		  WHERE 
+            -- Match violation_time for morning values
+  			violation_time SIMILAR TO '\d\d\d\dA'
+    	)
+        -- Value when pattern matched
+        THEN 1 
+        -- Value when pattern not matched
+        ELSE 0 
+    END AS morning 
+FROM 
+	parking_violation;
 
 
 					--Masking identifying information with regular expressions
@@ -79,8 +97,12 @@ plate number.
 --can be used in the report.
 
 
-
-
+SELECT 
+	summons_number,
+	-- Replace uppercase letters in plate_id with dash
+	REGEXP_REPLACE(plate_id, '[A-Z]', '-', 'g') 
+FROM 
+	parking_violation;
 
 
 					--Matching inconsistent color names
@@ -96,7 +118,14 @@ The fuzzystrmatch module has already been enabled for you.
 --Recall that the DIFFERENCE() function accepts string values (not Soundex codes) as parameter arguments.
 
 
-
+SELECT
+  summons_number,
+  vehicle_color
+FROM
+  parking_violation
+WHERE
+  -- Match SOUNDEX codes of vehicle_color and 'GRAY'
+  DIFFERENCE(vehicle_color, 'GRAY') = 4;
 
 
 
@@ -115,7 +144,20 @@ Complete the SET clause to assign 'GRAY' as the vehicle_color for records with a
 Update the WHERE clause of the subquery so that the summons_number values returned exclude summons_number values from records with 'GR' as the vehicle_color value.
 */
 
-
+UPDATE 
+	parking_violation
+SET 
+	-- Update vehicle_color to `GRAY`
+	vehicle_color = 'GRAY'
+WHERE 
+	summons_number IN (
+      SELECT summons_number
+      FROM parking_violation
+      WHERE
+        DIFFERENCE(vehicle_color, 'GRAY') = 4 AND
+        -- Filter out records that have GR as vehicle_color
+        vehicle_color != 'GR'
+);
 
 
 
@@ -132,9 +174,45 @@ The primary colors RED, BLUE, and YELLOW will be used for extending the color na
 --1 Generate columns (red, blue, yellow) storing the DIFFERENCE() value for each vehicle_color compared to the strings RED, BLUE, and YELLOW.
 --Restrict the returned records to those with a DIFFERENCE() value of 4 for one of RED, BLUE, or YELLOW.
 
+SELECT 
+	summons_number,
+	vehicle_color,
+    -- Include the DIFFERENCE() value for each color
+	DIFFERENCE(vehicle_color, 'RED') AS "red",
+	DIFFERENCE(vehicle_color, 'BLUE') AS "blue",
+	DIFFERENCE(vehicle_color, 'YELLOW') AS "yellow"
+FROM
+	parking_violation
+WHERE 
+	(
+      	-- Condition records on DIFFERENCE() value of 4
+		DIFFERENCE(vehicle_color, 'RED') = 4 OR
+		DIFFERENCE(vehicle_color, 'BLUE') = 4 OR
+		DIFFERENCE(vehicle_color, 'YELLOW') = 4
+	)
+	
+	
+--2 Update the SELECT query to match BL or BLA vehicle_color values using the regular expression pattern 'BLA?' and exclude these records from the result.
+
+SELECT 
+	summons_number,
+    vehicle_color,
+	DIFFERENCE(vehicle_color, 'RED') AS "red",
+	DIFFERENCE(vehicle_color, 'BLUE') AS "blue",
+	DIFFERENCE(vehicle_color, 'YELLOW') AS "yellow"
+FROM
+	parking_violation
+WHERE
+	(
+		DIFFERENCE(vehicle_color, 'RED') = 4 OR
+		DIFFERENCE(vehicle_color, 'BLUE') = 4 OR
+		DIFFERENCE(vehicle_color, 'YELLOW') = 4
+    -- Exclude records with 'BL' and 'BLA' vehicle colors
+	) AND vehicle_color NOT SIMILAR TO 'BLA?'
 
 
-
+--3 Use the records from the previously executed SELECT statement (now stored in a table named red_blue_yellow) to update the vehicle_color values 
+--where strong similarity (a value of 4) to RED, BLUE, or YELLOW was identified.
 
 
 
