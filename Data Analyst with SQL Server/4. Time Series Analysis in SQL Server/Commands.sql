@@ -1,4 +1,12 @@
 --                                                                Chapter 1: Working with Dates and Times
+/*
+SQL Server has a number of functions dedicated to working with date types. We will first analyze three functions which return integers representing 
+the year, month, and day of month, respectively.
+
+These functions can allow us to group dates together, letting us calculate running totals by year or month-over-month comparisons of expenditures.
+We could also analyze sales by calendar day of the month to determine if there is a strong monthly cycle.
+*/
+
 
 --Use the YEAR(), MONTH(), and DAY() functions to determine the year, month, and day for the current date and time.
  DECLARE
@@ -8,8 +16,24 @@ SELECT
 	year(@SomeTime) AS TheYear,
 	month(@SomeTime) AS TheMonth,
 	day(@SomeTime) AS TheDay;
-  
---Using the DATEPART() function, fill in the appropriate date parts. 
+ 
+ 
+ 
+ 
+ 
+ 							--Break a date and time into component parts
+
+
+
+/*
+Although YEAR(), MONTH(), and DAY() are helpful functions and are easy to remember, we often want to break out dates into different component parts such as 
+the day of week, week of year, and second after the minute. This is where functions like DATEPART() and DATENAME() come into play.
+
+Here we will use the night the Berlin Wall fell, November 9th, 1989.
+*/
+
+
+--1 Using the DATEPART() function, fill in the appropriate date parts. 
 --For a list of parts, review https://docs.microsoft.com/en-us/sql/t-sql/functions/datepart-transact-sql
 DECLARE
 	@BerlinWallFalls DATETIME2(7) = '1989-11-09 23:49:36.2294852';
@@ -25,7 +49,8 @@ SELECT
 	DATEPART(second, @BerlinWallFalls) AS TheSecond,
 	DATEPART(nanosecond, @BerlinWallFalls) AS TheNanosecond;
   
-  --Using the DATENAME() function, fill in the appropriate function calls.
+  
+--2 Using the DATENAME() function, fill in the appropriate function calls.
   DECLARE
 	@BerlinWallFalls DATETIME2(7) = '1989-11-09 23:49:36.2294852';
 
@@ -41,10 +66,29 @@ SELECT
 	DATENAME(SECOND, @BerlinWallFalls) AS TheSecond,
 	DATENAME(NANOSECOND, @BerlinWallFalls) AS TheNanosecond;
   
---How many DATENAME() results differ from their DATEPART() counterparts?
+--3 How many DATENAME() results differ from their DATEPART() counterparts?
 --Ans: two
 
---Fill in the date parts and intervals needed to determine how SQL Server works on February 29th of a leap year.
+
+					--Date math and leap years
+/*
+Some of you may have experience using R and here we note that leap year date math can be tricky with R and the lubridate package. 
+lubridate has two types of functions: duration and period.
+
+lubridate::ymd(20120229) - lubridate::dyears(4) --> 2008-03-01, which is wrong.
+
+lubridate::ymd(20120229) - lubridate::dyears(1) --> 2011-03-01, which is correct.
+
+lubridate::ymd(20120229) - lubridate::years(4) --> 2008-02-29, which is correct.
+
+lubridate::ymd(20120229) - lubridate::years(1) --> NA, which is unexpected behavior.
+
+We can use the DATEADD() and DATEDIFF() functions to see how SQL Server deals with leap years to see if it has any of the same eccentricities.
+
+*/
+
+
+--1 Fill in the date parts and intervals needed to determine how SQL Server works on February 29th of a leap year.
 --2012 was a leap year. The leap year before it was 4 years earlier, and the leap year after it was 4 years later.
 
 DECLARE
@@ -58,7 +102,9 @@ SELECT
 	DATEADD(YEAR, 4, @LeapDay) AS NextLeapYear,
 	DATEADD(YEAR, -1, @LeapDay) AS PriorYear;
   
---Fill in the date parts and intervals needed to determine how SQL Server works on days next to a leap year.
+  
+  
+--2 Fill in the date parts and intervals needed to determine how SQL Server works on days next to a leap year.
 DECLARE
 	@PostLeapDay DATETIME2(7) = '2012-03-01 18:00:00';
 -- Fill in the date parts and intervals as needed
@@ -72,7 +118,10 @@ SELECT
 	DATEADD(DAY, -1, DATEADD(YEAR, 4, @PostLeapDay)) AS NextLeapDay,
   DATEADD(DAY, -2, @PostLeapDay) AS TwoDaysAgo;
     
---Taking TwoDaysAgo from the prior step, use the DATEDIFF() function to test how it handles leap years.
+    
+    
+    
+--3 Taking TwoDaysAgo from the prior step, use the DATEDIFF() function to test how it handles leap years.
 DECLARE
 	@PostLeapDay DATETIME2(7) = '2012-03-01 18:00:00',
     @TwoDaysAgo DATETIME2(7);
@@ -85,6 +134,20 @@ SELECT
 	DATEDIFF(DAY, @TwoDaysAgo, @PostLeapDay) AS DaysDifference,
 	DATEDIFF(HOUR, @TwoDaysAgo, @PostLeapDay) AS HoursDifference,
 	DATEDIFF(MINUTE, @TwoDaysAgo, @PostLeapDay) AS MinutesDifference;
+  
+  
+  
+  				--Rounding dates
+
+/*
+SQL Server does not have an intuitive way to round down to the month, hour, or minute. You can, however, combine the DATEADD() and DATEDIFF() functions to perform 
+this rounding.
+
+To round the date 1914-08-16 down to the year, we would call DATEADD(YEAR, DATEDIFF(YEAR, 0, '1914-08-16'), 0). To round that date down to the month, we would call 
+DATEADD(MONTH, DATEDIFF(MONTH, 0, '1914-08-16'), 0). This works for several other date parts as well.
+*/  
+  
+  
   
 --Use DATEADD() and DATEDIFF() in conjunction with date parts to round down our time to the day, hour, and minute.
 DECLARE
@@ -99,7 +162,23 @@ RoundedToDay		RoundedToHour		RoundedToMinute
 2018-06-14 00:00:00	2018-06-14 16:00:00	2018-06-14 16:29:00
 
 
---Fill in the appropriate function, CAST(), for each example. Using the aliases as a guide, fill in the appropriate variable for each example.
+
+
+
+
+						-- 1.2 Formatting dates for reporting
+/*
+We can use the CAST() function to translate data between various data types, including between date/time types and string types. 
+The CONVERT() function takes three parameters: a data type, an input value, and an optional format code.
+
+In this exercise, we will see how we can use the CAST() and CONVERT() functions to translate dates to strings for formatting by looking at the (late) night the 
+Chicago Cubs won the World Series in the US in 2016. In the process, we will see one difference between the DATETIME and the DATETIME2 data types for CAST()
+and the added flexibility of CONVERT().
+*/
+
+
+
+--1 Fill in the appropriate function, CAST(), for each example. Using the aliases as a guide, fill in the appropriate variable for each example.
 DECLARE
 	@CubsWinWorldSeries DATETIME2(3) = '2016-11-03 00:30:29.245',
 	@OlderDateType DATETIME = '2016-11-03 00:30:29.245';
@@ -111,7 +190,8 @@ SELECT
 	CAST(@OlderDateType AS DATE) AS OlderDateForm,
 	CAST(@OlderDateType AS NVARCHAR(30)) AS OlderStringForm;
 
---For the inner function, turn the date the Cubs won the World Series into a DATE data type using the CAST() function.
+
+--2 For the inner function, turn the date the Cubs won the World Series into a DATE data type using the CAST() function.
 --For the outer function, reshape this date as an NVARCHAR(30) using the CAST() function.
 DECLARE
 	@CubsWinWorldSeries DATETIME2(3) = '2016-11-03 00:30:29.245';
@@ -120,7 +200,8 @@ SELECT
 	CAST(CAST(@CubsWinWorldSeries AS DATE) AS NVARCHAR(30)) AS DateStringForm;
 
 
---Use the CONVERT() function to translate the date the Cubs won the world series into the DATE and NVARCHAR(30) data types.
+
+--3 Use the CONVERT() function to translate the date the Cubs won the world series into the DATE and NVARCHAR(30) data types.
 --The functional form for CONVERT() is CONVERT(DataType, SomeValue).
 DECLARE
 	@CubsWinWorldSeries DATETIME2(3) = '2016-11-03 00:30:29.245';
@@ -130,7 +211,8 @@ SELECT
 	CONVERT(NVARCHAR(30), @CubsWinWorldSeries) AS CubsWinStringForm;
 
 
---Fill in the correct function call for conversion.
+
+--4 Fill in the correct function call for conversion.
 --The UK date formats are 3 and 103, representing two-digit year (dmy) and four-digit year (dmyyyy), respectively.
 --The corresponding US date formats are 1 and 101.
 
@@ -145,7 +227,17 @@ SELECT
 	CONVERT(NVARCHAR(30), @CubsWinWorldSeries, 101) AS US_mdyyyy;
 
 
---Fill in the function and use the 'd' format parameter (note that this is case sensitive!) to format as short dates. Also, fill in the culture for Japan, 
+				--Formatting dates with FORMAT()
+/*
+The FORMAT() function allows for additional flexibility in building dates. It takes in three parameters: the input value, the input format, and an optional culture 
+(such as en-US for US English or zh-cn for Simplified Chinese).
+
+In the following exercises, we will investigate three separate methods for formatting dates using the FORMAT() function against the day that Python 3 became generally 
+available: December 3rd, 2008.
+*/
+
+
+--1 Fill in the function and use the 'd' format parameter (note that this is case sensitive!) to format as short dates. Also, fill in the culture for Japan, 
 --which in the .NET framework is jp-JP (this is not case sensitive).
 DECLARE
 	@Python3ReleaseDate DATETIME2(3) = '2008-12-03 19:45:00.033';
@@ -160,7 +252,9 @@ SELECT
 US_d		DE_d		JP_d		CN_d
 12/3/2008	03.12.2008	12/03/2008	2008/12/3	
 
---Use the 'D' format parameter (this is case sensitive!) to build long dates. Also, fill in the culture for Indonesia, which in the .NET framework is id-ID.
+
+
+--2 Use the 'D' format parameter (this is case sensitive!) to build long dates. Also, fill in the culture for Indonesia, which in the .NET framework is id-ID.
 DECLARE
 	@Python3ReleaseDate DATETIME2(3) = '2008-12-03 19:45:00.033';
 SELECT
@@ -174,7 +268,9 @@ SELECT
 US_D				DE_D				ID_D			CN_D
 Wednesday, December 3, 2008	Mittwoch, 3. Dezember 2008	Rabu, 03 Desember 2008	2008年12月3日
 
---Fill in the custom format strings needed to generate the results in preceding comments. Use date parts such as yyyy, MM, MMM, and dd. 
+
+
+--3 Fill in the custom format strings needed to generate the results in preceding comments. Use date parts such as yyyy, MM, MMM, and dd. 
 --Capitalization is important for the FORMAT() function! See the full list at https://bit.ly/30SGA5a.
 DECLARE
 	@Python3ReleaseDate DATETIME2(3) = '2008-12-03 19:45:00.033';
@@ -191,14 +287,38 @@ SELECT
     -- (day hour:minute year.second)
 	FORMAT(@Python3ReleaseDate, 'dd hh:mm yyyy.ss') AS F5;
 
-
-	--Working with calendar tables
+	
+	
+	
+	
+	
+					--1.3Working with calendar tables
+					--The benefits of calendar tables
 
 --Which of the following is not a benefit of using a calendar table?
 --Ans: Calendar tables can let you to perform actions you could not otherwise do in T-SQL.
 
---Find the dates of all Tuesdays in December covering the calendar years 2008 through 2010.
+
+
+
+
+
+					--Try out a calendar table
+					
+/*
+Calendar tables are also known in the warehousing world as date dimensions. A calendar table is a helpful utility table which you can use to perform date range 
+calculations quickly and efficiently. This is especially true when dealing with fiscal years, which do not always align to a calendar year, or holidays which may 
+not be on the same date every year.
+
+In our example company, the fiscal year starts on July 1 of the current calendar year, so Fiscal Year 2019 started on July 1, 2019 and goes through June 30, 2020. 
+All of this information is in a table called dbo.Calendar.
+*/
+
+
+--1 Find the dates of all Tuesdays in December covering the calendar years 2008 through 2010.
 -- Find Tuesdays in December for calendar years 2008-2010
+
+	
 SELECT
 	c.Date
 FROM dbo.calendar c
@@ -209,8 +329,12 @@ WHERE
 ORDER BY
 	c.Date;
 	
---Find the dates for fiscal week 29 of fiscal year 2019.
+	
+	
+--2 Find the dates for fiscal week 29 of fiscal year 2019.
 -- Find fiscal week 29 of fiscal year 2019
+
+
 SELECT
 	c.Date
 FROM dbo.Calendar c
@@ -222,8 +346,31 @@ WHERE
 ORDER BY
 	c.Date ASC;
 	
--- 		Joining to a calendar table
---Fill in the blanks to determine which dates had type 3 incidents during the third fiscal quarter of FY2019.
+	
+	
+	
+	
+	
+				-- Joining to a calendar table
+/*
+In the prior exercise, we looked at a new table, dbo.Calendar. This table contains pre-calculated date information stretching 
+from January 1st, 2000 through December 31st, 2049. Now we want to use this calendar table to filter another table, dbo.IncidentRollup.
+
+The Incident Rollup table contains artificially-generated data relating to security incidents at a fictitious company.
+
+You may recall from prerequisite courses how to join tables. Here's an example of joining to a calendar table:
+
+SELECT
+    t.Column1,
+    t.Column2
+FROM dbo.Table t
+    INNER JOIN dbo.Calendar c
+        ON t.Date = c.Date;
+				
+*/
+
+				
+--1 Fill in the blanks to determine which dates had type 3 incidents during the third fiscal quarter of FY2019.
 SELECT
 	ir.IncidentDate,
 	c.FiscalDayOfYear,
@@ -239,7 +386,10 @@ WHERE
     -- Fiscal quarter 3
 	AND c.FiscalQuarter = 3;
 	
---Fill in the gaps in to determine type 4 incidents which happened on weekends in FY2019 after fiscal week 30.
+	
+	
+--2 Fill in the gaps in to determine type 4 incidents which happened on weekends in FY2019 after fiscal week 30.
+
 
 SELECT
 	ir.IncidentDate,
@@ -259,9 +409,22 @@ WHERE
 	AND c.IsWeekend	 = 1;
 
 
---									Chapter 2: Converting to Dates and Times
 
---Create dates from component parts in the calendar table: calendar year, calendar month, and the day of the month.
+
+
+								--Chapter 2: Converting to Dates and Times
+				--2.1 Build dates from parts
+/*
+The DATEFROMPARTS() function allows us to turn a series of numbers representing date parts into a valid DATE data type. In this exercise, 
+we will learn how to use DATEFROMPARTS() to build dates from components in a calendar table.
+
+Although the calendar table already has dates in it, this helps us visualize circumstances in which the base table has integer date components but no date value, 
+which might happen when importing data from flat files directly into a database.
+*/
+
+
+
+--1 Create dates from component parts in the calendar table: calendar year, calendar month, and the day of the month.
 -- Create dates from component parts on the calendar table
 SELECT TOP(10)
 	DATEFROMPARTS(c.CalendarYear, c.CalendarMonth, c.day) AS CalendarDate
@@ -271,7 +434,9 @@ WHERE
 ORDER BY
 	c.FiscalDayOfYear ASC;
 	
---Create dates from the component parts of the calendar table. Use the calendar year, calendar month, and day of month.
+	
+	
+--2 Create dates from the component parts of the calendar table. Use the calendar year, calendar month, and day of month.
 SELECT TOP(10)
 	c.CalendarQuarterName,
 	c.MonthName,
@@ -286,9 +451,24 @@ ORDER BY
 	c.FiscalDayOfYear ASC;
 
 
---	Build the date and time (using DATETIME2FROMPARTS()) that Neil and Buzz became the first people to land on the moon. 
+
+
+
+
+				--Build dates and times from parts
+
+/*
+SQL Server has several functions for generating date and time combinations from parts. In this exercise, we will look at DATETIME2FROMPARTS() and DATETIMEFROMPARTS().
+
+Neil Armstrong and Buzz Aldrin landed the Apollo 11 Lunar Module--nicknamed The Eagle--on the moon on July 20th, 1969 at 20:17 UTC. They remained on the moon for 
+approximately 21 1/2 hours, taking off on July 21st, 1969 at 18:54 UTC.
+*/	
+		
+		
+--Build the date and time (using DATETIME2FROMPARTS()) that Neil and Buzz became the first people to land on the moon. 
 --Note the "2" in DATETIME2FROMPARTS(), meaning we want to build a DATETIME2 rather than a DATETIME.
 --Build the date and time (using DATETIMEFROMPARTS()) that Neil and Buzz took off from the moon. Note that this is for a DATETIME, not a DATETIME2.
+
 
 SELECT
 	-- Mark the date and time the lunar module touched down
@@ -298,6 +478,21 @@ SELECT
     -- Use 24-hour notation for hours, so e.g., 9 PM is 21
 	DATETIMEFROMPARTS(1969, 7, 21, 18, 54, 00, 000) AS MoonDeparture;
 	
+	
+	
+	
+	
+	
+				--Build dates and times with offsets from parts
+/*
+The DATETIMEOFFSETFROMPARTS() function builds a DATETIMEOFFSET out of component values. It has the most input parameters of any date and time builder function.
+
+On January 19th, 2038 at 03:14:08 UTC (that is, 3:14:08 AM), we will experience the Year 2038 (or Y2.038K) problem. This is the moment that 32-bit devices will 
+reset back to the date 1900-01-01. This runs the risk of breaking every 32-bit device using POSIX time, which is the number of seconds elapsed since January 1, 1970 
+at midnight UTC.
+*/
+
+		
 --Build a DATETIMEOFFSET which represents the last millisecond before the Y2.038K problem hits. The offset should be UTC.
 --Build a DATETIMEOFFSET which represents the moment devices hit the Y2.038K issue in UTC time. 
 --Then use the AT TIME ZONE operator to convert this to Eastern Standard Time.
@@ -309,7 +504,25 @@ SELECT
 	DATETIMEOFFSETFROMPARTS(2038,  1, 19, 3, 14, 08, 0, 0, 0, 3) AT TIME ZONE 'Eastern Standard Time' AS TimeForChaos;
 	
 	
--- 		Translating date strings
+	
+	
+	
+	
+	
+					--2.2  Translating date strings
+					--Cast strings to dates
+/*
+The CAST() function allows us to turn strings into date and time data types. In this example, we will review many of the formats CAST() can handle.
+
+Review the data in the dbo.Dates table which has been pre-loaded for you. Then use the CAST() function to convert these dates twice: once into a DATE type and 
+once into a DATETIME2(7) type. Because one of the dates includes data down to the nanosecond, we cannot convert to a DATETIME type or any DATETIME2 type with 
+less precision.
+
+NOTE: the CAST() function is language- and locale-specific, meaning that for a SQL Server instance configured for US English, it will translate 08/23/2008 as 
+2008-08-23 but it will fail on 23/08/2008, which a SQL Server with the French Canadian locale can handle.
+*/
+					
+					
 --Cast the input string DateText in the dbo.Dates temp table to the DATE data type.
 --Cast the input string DateText in the dbo.Dates temp table to the DATETIME2(7) data type.
 SELECT
@@ -319,6 +532,23 @@ SELECT
 	-- Cast as DATETIME2(7)
 	CAST(d.DateText AS DATETIME2(7)) AS StringAsDateTime2
 FROM dbo.Dates d;
+
+
+
+				
+				
+				--Convert strings to dates
+/*
+The CONVERT() function behaves similarly to CAST(). When translating strings to dates, the two functions do exactly the same work under the covers. 
+Although we used all three parameters for CONVERT() during a prior exercise in Chapter 1, we will only need two parameters here: the data type and input expression.
+
+In this exercise, we will once again look at a table called dbo.Dates. This time around, we will get dates in from our German office. 
+In order to handle German dates, we will need to use SET LANGUAGE to change the language in our current session to German. 
+This affects date and time formats and system messages.
+
+Try querying the dbo.Dates table first to see how things differ from the prior exercise.
+*/
+
 
 --Use the CONVERT() function to translate DateText into a date data type. 
 --Then use the CONVERT() function to translate DateText into a DATETIME2(7) data type.
@@ -332,6 +562,19 @@ SELECT
 	Convert(DATETIME2(7), d.DateText) AS StringAsDateTime2
 FROM dbo.Dates d;
 
+
+
+					
+					
+					--Parse strings to dates
+/*
+Changing our language for data loading is not always feasible. Instead of using the SET LANGUAGE syntax, 
+we can instead use the PARSE() function to parse a string as a date type using a specific locale.
+
+We will once again use the dbo.Dates table, this time parsing all of the dates as German using the de-de locale.
+*/
+
+
 --Parse DateText as dates using the German locale (de-de).
 --Then, parse DateText as the data type DATETIME2(7), still using the German locale.
 SELECT
@@ -342,7 +585,22 @@ SELECT
 	Parse(d.DateText AS DATETIME2(7) USING 'de-de') AS StringAsDateTime2
 FROM dbo.Dates d;
 
---		Working with offsets
+
+
+
+					--2.3 Working with offsets
+					--Changing a date's offset
+/*
+We can use the SWITCHOFFSET() function to change the time zone of a DATETIME, DATETIME2, or DATETIMEOFFSET typed date or a valid date string. 
+SWITCHOFFSET() takes two parameters: the date or string as input and the time zone offset. It returns the time in that new time zone, so 3:00 AM Eastern Daylight 
+Time will become 2:00 AM Central Daylight Time.
+
+The 2016 Summer Olympics in Rio de Janeiro started at 11 PM UTC on August 8th, 2016. Starting with a string containing that date and time, we can see what time that 
+was in other locales.
+*/
+
+
+
 
 --Fill in the appropriate function call for Brasilia, Brazil.
 --Fill in the appropriate function call and time zone for Chicago, Illinois. In August, Chicago is 2 hours behind Brasilia Standard Time.
@@ -358,7 +616,44 @@ SELECT
 	-- Fill in the time zone for New Delhi, India
 	SWITCHOFFSET(@OlympicsUTC, '+05:30') AS NewDelhiTime;
 
+
+
+
+
+					--Using the time zone DMV to look up times
+/*
+The SWITCHOFFSET() function has an undesirable limitation: you need to know the offset value yourself. You might memorize that US Eastern Standard Time is 
+UTC -5:00 and Eastern Daylight Time is UTC -04:00, but knowing India Standard Time or Tuvalu Time might be a stretch.
+
+Fortunately, we have a Dynamic Management View (DMV) available to help us: sys.time_zone_info. This searches the set of time zones available on the operating 
+system (in the Windows registry or /usr/share/zoneinfo on Linux or macOS).
+
+The 2016 Summer Olympics in Rio de Janeiro started at 11 PM UTC on August 8th, 2016. Starting with a string containing that date and time, we can see what time that
+was in other locales knowing only the time zone name but not its offset.
+*/
+
+
+
 --Create a valid SQL query by dragging and dropping the items into the correct sequence.
+
+
+
+
+
+						
+					--Converting to a date offset
+					
+/*
+In addition to SWITCHOFFSET(), we can use the TODATETIMEOFFSET() to turn an existing date into a date type with an offset. 
+If our starting time is in UTC, we will need to correct for time zone and then append an offset. To correct for the time zone, we can add or subtract hours 
+(and minutes) manually.
+
+Closing ceremonies for the 2016 Summer Olympics in Rio de Janeiro began at 11 PM UTC on August 21st, 2016. Starting with a string containing that date and time, 
+we can see what time that was in other locales. For the time in Phoenix, Arizona, you know that they observe Mountain Standard Time, which is UTC -7 year-round. 
+The island chain of Tuvalu has its own time which is 12 hours ahead of UTC.
+*/
+
+
 
 --Fill in the time in Phoenix, Arizona, which, being Mountain Standard Time, was UTC -07:00.
 --Fill in the time for Tuvalu, which is 12 hours ahead of UTC.
@@ -370,8 +665,25 @@ SELECT
 	-- Fill in 12 hours forward and a '+12:00' offset.
 	TODATETIMEOFFSET(DATEADD(HOUR,+12, @OlympicsClosingUTC), '+12:00') AS TuvaluTime;
 	
---		Handling invalid dates
---Starting with the TRY_CONVERT() function, fill in the function name and input parameter for each example.
+	
+	
+	
+	
+	
+	
+	
+						--2.4 Handling invalid dates
+						--Try out type-safe date functions
+/*
+In this exercise, we will try out the TRY_CONVERT(), TRY_CAST(), and TRY_PARSE() set of functions. Each of these functions will safely parse string data and attempt 
+to convert to another type, returning NULL if the conversion fails. Conversion to, e.g., a date type can fail for several reasons. If the input string is not a date, 
+conversion will fail. If the input type is in a potentially ambiguous format, conversion might fail. An example of this is the date 04/01/2019 which has a different 
+meaning in the United States (April 1, 2019) versus most European countries (January 4th, 2019).
+*/
+
+
+
+--1 Starting with the TRY_CONVERT() function, fill in the function name and input parameter for each example.
 DECLARE
 	@GoodDateINTL NVARCHAR(30) = '2019-03-01 18:23:27.920',
 	@GoodDateDE NVARCHAR(30) = '13.4.2019',
@@ -386,7 +698,21 @@ SELECT
 	-- Fill in the correct input parameter for BadDate
 	TRY_CONVERT(DATETIME2(3), @BadDate) AS BadDate;
 	
---Fill in the correct conversion function based on its parameter signature.
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+--2 Fill in the correct conversion function based on its parameter signature.
 --Note the amount of time returned in the DATEDIFF() call.
 --Do not use @StartTimeCast or @EndTimeCast in your answer; these are for calculating execution time.
 
