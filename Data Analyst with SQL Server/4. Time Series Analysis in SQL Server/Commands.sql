@@ -1333,6 +1333,136 @@ we will only include dates with at least 8 incidents.
 --Fill in each window function based on the column alias. You should include ROW_NUMBER(), RANK(), and DENSE_RANK() exactly once.
 --Fill in the OVER clause ordering by ir.NumberOfIncidents in descending order.
 
+SELECT
+	ir.IncidentDate,
+	ir.NumberOfIncidents,
+    -- Fill in each window function and ordering
+    -- Note that all of these are in descending order!
+	ROW_NUMBER() OVER (ORDER BY ir.NumberOfIncidents DESC) AS rownum,
+	RANK() OVER (ORDER BY ir.NumberOfIncidents DESC) AS rk,
+	DENSE_RANK() OVER (ORDER BY ir.NumberOfIncidents DESC) AS dr
+FROM dbo.IncidentRollup ir
+WHERE
+	ir.IncidentTypeID = 3
+	AND ir.NumberOfIncidents >= 8
+ORDER BY ir.NumberOfIncidents DESC;
+
+
+
+
+
+					--Aggregate window functions
+					
+/*
+There are several aggregate window functions available to you. In this exercise, we will look at reviewing multiple aggregates over the same window.
+
+Our window this time will be the entire data set, meaning that our OVER() clause will remain empty.
+*/
+--Fill in the correct aggregate function for each column in the result set.
+
+
+SELECT
+	ir.IncidentDate,
+	ir.NumberOfIncidents,
+	SUM(ir.NumberOfIncidents) OVER () AS SumOfIncidents,
+	MIN(ir.NumberOfIncidents) OVER () AS LowestNumberOfIncidents,
+	MAX(ir.NumberOfIncidents) OVER () AS HighestNumberOfIncidents,
+	COUNT(ir.NumberOfIncidents) OVER () AS CountOfIncidents
+FROM dbo.IncidentRollup ir
+WHERE
+	ir.IncidentDate BETWEEN '2019-07-01' AND '2019-07-31'
+AND ir.IncidentTypeID = 3;
+
+
+	
+					
+					--4.2 Calculating running totals and moving averages
+					--Running totals with SUM()
+/*
+One of the more powerful uses of window functions is calculating running totals: an ongoing tally of a particular value over a given stretch of time. 
+Here, we would like to use a window function to calculate how many incidents have occurred on each date and incident type in July of 2019 as well as a running tally 
+of the total number of incidents by incident type. A window function will help us solve this problem in one query.
+*/
+/*
+Fill in the correct window function.
+Fill in the PARTITION BY clause in the window function, partitioning by incident type ID.
+Fill in the ORDER BY clause in the window function, ordering by incident date (in its default, ascending order). */
+
+
+SELECT
+	ir.IncidentDate,
+	ir.IncidentTypeID,
+	ir.NumberOfIncidents,
+    -- Get the total number of incidents
+	SUM(ir.NumberOfIncidents) OVER (
+      	-- Do this for each incident type ID
+		PARTITION BY ir.IncidentTypeID	
+      	-- Sort by the incident date
+		ORDER BY ir.IncidentDate
+	) AS NumberOfIncidents
+FROM dbo.IncidentRollup ir
+	INNER JOIN dbo.Calendar c
+		ON ir.IncidentDate = c.Date
+WHERE
+	c.CalendarYear = 2019
+	AND c.CalendarMonth = 7
+	AND ir.IncidentTypeID IN (1, 2)
+ORDER BY
+	ir.IncidentTypeID,
+	ir.IncidentDate;
+	
+	
+	
+						--Investigating window frames
+						
+/*						
+In addition to the PARTITION BY and ORDER BY clauses, window functions can include frames which tell the database engine what we include as relevant to the window.
+
+Here we will look at four different frames to understand how the results would differ. For each example, we want to fill in the window frame for the following query:
+
+SELECT
+    ir.IncidentDate,
+    ir.IncidentTypeID,
+    SUM(ir.NumberOfIncidents) OVER (
+        PARTITION BY ir.IncidentTypeID
+        ORDER BY ir.IncidentDate
+        << WINDOW FRAME >>
+    ) AS NumberOfIncidents
+FROM dbo.IncidentRollup ir;    
+
+We will specify ROWS or RANGE based on whether we want to include individual rows or a range of values. We will specify the "preceding" clause, 
+which tells how many rows (or what range of values) we want prior to the current row. We will also specify the "following" clause, which tells what we want from the 
+current row forward.
+*/
+/*
+For each zone, drag the pre-written window frame which you could use to solve the problem into the zone. You may use each zone more than once.
+Note that running totals represent a sum ranging from the beginning of time to the current row in the window.
+*/
+							
+							
+							
+						--Calculating moving averages
+/*
+Instead of looking at a running total from the beginning of time until now, management would like to see the average number of incidents over the past 
+7 days--that is, starting 6 days ago and ending on the current date. Because this is over a specified frame which changes over the course of our query, 
+this is called a moving average.
+
+SQL Server does not have the ability to look at ranges of time in window functions, so we will need to assume that there is one row per day and use the ROWS clause.
+*/
+
+--Fill in the correct window function to perform a moving average starting from 6 days ago through today (the current row).
+--Fill in the window frame, including the ROWS clause, window frame preceding, and window frame following.
+
+
+
+
+
+
+
+
+
+
+
 
 
 
