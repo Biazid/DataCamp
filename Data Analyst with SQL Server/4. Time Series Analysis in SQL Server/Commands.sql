@@ -1054,6 +1054,290 @@ no time component: the DATE type.
 --Fill in the GROUP BY clause with any non-aggregated values in the SELECT clause (but without aliases like AS Day).
 
 
+SELECT
+	-- Downsample to a daily grain
+    -- Cast CustomerVisitStart as a date
+	CAST(dsv.CustomerVisitStart AS DATE) AS Day,
+	SUM(dsv.AmenityUseInMinutes) AS AmenityUseInMinutes,
+	COUNT(1) AS NumberOfAttendees
+FROM dbo.DaySpaVisit dsv
+WHERE
+	dsv.CustomerVisitStart >= '2020-06-11'
+	AND dsv.CustomerVisitStart < '2020-06-23'
+GROUP BY CAST(dsv.CustomerVisitStart AS DATE)
+ORDER BY Day;
+
+
+
+			
+				--Downsample to a weekly grain
+/*
+Management would like to see how well people have utilized the spa in 2020. They would like to see results by week, 
+reviewing the total number of minutes of amenity usage, the number of attendees, and the customer with the largest customer ID that week to see if new customers are 
+coming in.
+
+We can use functions in SQL Server to downsample to a fixed grain like this. One such function is DATEPART().
+*/
+--Downsample the day spa visit data to a weekly grain using the DATEPART() function.
+--Find the customer with the largest customer ID for a given week.
+--Fill in the GROUP BY clause with any non-aggregated values in the SELECT clause (but without aliases like AS Week).
+
+
+SELECT
+	-- Downsample to a weekly grain
+	DATEPART(week, dsv.CustomerVisitStart) AS Week,
+	SUM(dsv.AmenityUseInMinutes) AS AmenityUseInMinutes,
+	-- Find the customer with the largest customer ID for that week
+	MAX(dsv.CustomerID) AS HighestCustomerID,
+	COUNT(1) AS NumberOfAttendees
+FROM dbo.DaySpaVisit dsv
+WHERE
+	dsv.CustomerVisitStart >= '2020-01-01'
+	AND dsv.CustomerVisitStart < '2021-01-01'
+GROUP BY DATEPART(week, dsv.CustomerVisitStart)
+ORDER BY Week;
+
+
+
+
+					--Downsample using a calendar table
+/*
+Management liked the weekly report but they wanted to see every week in 2020, not just the weeks with amenity usage. 
+We can use a calendar table to solve this problem: the calendar table includes all of the weeks, so we can join it to the dbo.DaySpaVisit table to find our answers.
+
+Management would also like to see the first day of each calendar week, as that provides important context to report viewers.
+*/
+/*
+Find and include the week of the calendar year.
+
+Include the minimum value of c.Date in each group as FirstDateOfWeek. This works because we are grouping by week.
+
+Join the Calendar table to the DaySpaVisit table based on the calendar table's date and each day spa customer's date of visit. 
+CustomerVisitStart is a DATETIME2 which includes time, so a direct join would only include visits starting at exactly midnight.
+
+Group by the week of calendar year.
+*/
+
+
+SELECT
+	-- Determine the week of the calendar year
+	c.CalendarWeekOfYear,
+	-- Determine the earliest DATE in this group
+    -- This is NOT the DayOfWeek column
+	MIN(c.Date) AS FirstDateOfWeek,
+	ISNULL(SUM(dsv.AmenityUseInMinutes), 0) AS AmenityUseInMinutes,
+	ISNULL(MAX(dsv.CustomerID), 0) AS HighestCustomerID,
+	COUNT(dsv.CustomerID) AS NumberOfAttendees
+FROM dbo.Calendar c
+	LEFT OUTER JOIN dbo.DaySpaVisit dsv
+		-- Connect dbo.Calendar with dbo.DaySpaVisit
+		-- To join on CustomerVisitStart, we need to turn 
+        -- it into a DATE type
+		ON c.Date = CAST(dsv.CustomerVisitStart AS DATE)
+WHERE c.CalendarYear = 2020
+GROUP BY c.CalendarWeekOfYear
+ORDER BY c.CalendarWeekOfYear;
+
+
+
+
+					--3.4 Grouping by ROLLUP, CUBE, and GROUPING SETS
+					--Generate a summary with ROLLUP
+/*
+The ROLLUP operator works best when your non-measure attributes are hierarchical. Otherwise, you may end up weird aggregation levels which don't make intuitive sense
+
+In this scenario, we wish to aggregate the total number of security incidents in the IncidentRollup table. Management would like to see data aggregated by the 
+combination of calendar year, calendar quarter, and calendar month. In addition, they would also like to see separate aggregate lines for calendar year plus calendar 
+quarter, as well as separate aggregate lines for each calendar year. Finally, they would like one more line for the grand total. We can do all of this in one 
+operation.
+*/
+--Complete the definition for NumberOfIncidents by adding up the number of incidents over each range.
+--Fill out the GROUP BY segment, including the WITH ROLLUP operator.
+
+
+SELECT
+	c.CalendarYear,
+	c.CalendarQuarterName,
+	c.CalendarMonth,
+    -- Include the sum of incidents by day over each range
+	SUM(ir.NumberOfIncidents) AS NumberOfIncidents
+FROM dbo.IncidentRollup ir
+	INNER JOIN dbo.Calendar c
+		ON ir.IncidentDate = c.Date
+WHERE ir.IncidentTypeID = 2
+GROUP BY
+	c.CalendarYear,
+	c.CalendarQuarterName,
+	c.CalendarMonth
+-- Fill in your grouping operator
+WITH ROLLUP
+ORDER BY
+	c.CalendarYear,
+	c.CalendarQuarterName,
+	c.CalendarMonth;
+
+
+
+						
+						--View all aggregations with CUBE
+/*
+The CUBE operator provides a cross aggregation of all combinations and can be a huge number of rows. This operator works best with non-hierarchical data where you 
+are interested in independent aggregations as well as the combined aggregations.
+
+In this scenario, we wish to find the total number of security incidents in the IncidentRollup table but will not follow a proper hierarchy. Instead, we will focus 
+on aggregating several unrelated attributes.
+*/
+--1 Fill in the missing columns from dbo.Calendar in the SELECT clause.
+--Fill out the GROUP BY segment, including the CUBE operator.
+
+
+
+SELECT
+	-- Use the ORDER BY clause as a guide for these columns
+    -- Don't forget that comma after the third column if you
+    -- copy from the ORDER BY clause!
+	ir.IncidentTypeID,
+	c.CalendarQuarterName,
+	c.WeekOfMonth,
+	SUM(ir.NumberOfIncidents) AS NumberOfIncidents
+FROM dbo.IncidentRollup ir
+	INNER JOIN dbo.Calendar c
+		ON ir.IncidentDate = c.Date
+WHERE
+	ir.IncidentTypeID IN (3, 4)
+GROUP BY
+	ir.IncidentTypeID,
+	c.CalendarQuarterName,
+	c.WeekOfMonth
+WITH CUBE
+ORDER BY
+	ir.IncidentTypeID,
+	c.CalendarQuarterName,
+	c.WeekOfMonth;
+	
+	
+	
+--2 In which quarter did we see the greatest number of incidents?
+--Ans: Quarter 3
+
+
+
+				--Generate custom groupings with GROUPING SETS
+				
+/*
+The GROUPING SETS operator allows us to define the specific aggregation levels we desire.
+
+In this scenario, management would like to see something similar to a ROLLUP but without quite as much information. 
+Instead of showing every level of aggregation in the hierarchy, management would like to see three levels: grand totals; by year; and by year, quarter, and month.
+*/
+/*
+Fill out the GROUP BY segment using GROUPING SETS. We want to see:
+One row for each combination of year, quarter, and month (in that hierarchical order)
+One row for each year
+One row with grand totals (that is, a blank group)
+*/
+
+SELECT
+	c.CalendarYear,
+	c.CalendarQuarterName,
+	c.CalendarMonth,
+	SUM(ir.NumberOfIncidents) AS NumberOfIncidents
+FROM dbo.IncidentRollup ir
+	INNER JOIN dbo.Calendar c
+		ON ir.IncidentDate = c.Date
+WHERE
+	ir.IncidentTypeID = 2
+-- Fill in your grouping operator here
+GROUP BY GROUPING SETS
+(
+  	-- Group in hierarchical order:  calendar year,
+    -- calendar quarter name, calendar month
+	(c.CalendarYear, c.CalendarQuarterName, c.CalendarMonth),
+  	-- Group by calendar year
+	(c.CalendarYear),
+    -- This remains blank; it gives us the grand total
+	()
+)
+ORDER BY
+	c.CalendarYear,
+	c.CalendarQuarterName,
+	c.CalendarMonth;
+	
+	
+		
+		
+		
+				--Combine multiple aggregations in one query
+/*
+In the last three exercises, we walked through the ROLLUP, CUBE, and GROUPING SETS grouping operators. Of these three, GROUPING SETS is the most customizable, 
+allowing you to build out exactly the levels of aggregation you want. GROUPING SETS makes no assumptions about hierarchy (unlike ROLLUP) and can remain manageable 
+with a good number of columns (unlike CUBE).
+
+In this exercise, we want to test several conjectures with our data:
+
+We have seen fewer incidents per month since introducing training in November of 2019.
+More incidents occur on Tuesday than on other weekdays.
+More incidents occur on weekends than weekdays.
+*/
+/*
+Fill out the grouping sets based on our conjectures above. We want to see the following grouping sets in addition to our grand total:
+
+One set by calendar year and month
+One set by the day of the week
+One set by whether the date is a weekend or not  */
+
+
+SELECT
+	c.CalendarYear,
+	c.CalendarMonth,
+	c.DayOfWeek,
+	c.IsWeekend,
+	SUM(ir.NumberOfIncidents) AS NumberOfIncidents
+FROM dbo.IncidentRollup ir
+	INNER JOIN dbo.Calendar c
+		ON ir.IncidentDate = c.Date
+GROUP BY GROUPING SETS
+(
+    -- Each non-aggregated column from above should appear once
+  	-- Calendar year and month
+	(c.CalendarYear, c.CalendarMonth),
+  	-- Day of week
+	(c.DayOfWeek),
+  	-- Is weekend or not
+	(c.IsWeekend),
+    -- This remains empty; it gives us the grand total
+	()
+)
+ORDER BY
+	c.CalendarYear,
+	c.CalendarMonth,
+	c.DayOfWeek,
+	c.IsWeekend;
+							
+							
+							
+							
+								
+								--Chapter4: Answering Time Series Questions with Window Functions
+								
+						--4.1 Using aggregation functions over windows
+						--Contrasting ROW_NUMBER(), RANK(), and DENSE_RANK()
+/*
+Among the ranking window functions, ROW_NUMBER() is the most common, followed by RANK() and DENSE_RANK(). Each of these ranking functions 
+(as well as NTILE()) provides us with a different way to rank records in SQL Server.
+
+In this exercise, we would like to determine how frequently each we see incident type 3 in our data set. We would like to rank the number of incidents in descending 
+order, such that the date with the highest number of incidents has a row number, rank, and dense rank of 1, and so on. To make it easier to follow, 
+we will only include dates with at least 8 incidents.
+*/
+--Fill in each window function based on the column alias. You should include ROW_NUMBER(), RANK(), and DENSE_RANK() exactly once.
+--Fill in the OVER clause ordering by ir.NumberOfIncidents in descending order.
+
+
+
+
+
+
 
 
 
