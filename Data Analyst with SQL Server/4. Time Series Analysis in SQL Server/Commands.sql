@@ -875,8 +875,197 @@ SELECT
 
 
 							--Chapter3: Aggregating Time Series Data
-							--3.1 Basic aggregate functions
+				--3.1 Basic aggregate functions
 							
 /*							
-							
+There are several useful aggregate functions in SQL Server which we can use to summarize our data over time frames and gain insights. 
+In the following example, you will look at a set of incident reports at a fictional company. They have already rolled up their incidents to the daily grain,
+giving us a number of incidents per type and day. We would like to investigate further and review incidents over a three-month period, 
+from August 1 through October 31st, and gain basic insights through aggregation.
+
+The key aggregate functions we will use are COUNT(), SUM(), MIN(), and MAX(). In the next exercise, we will look at some of the statistical aggregate functions.							
+*/
+
+--Fill in the appropriate aggregate function based on the column name. Choose from COUNT(), SUM(), MIN(), and MAX() for each.
+
+-- Fill in the appropriate aggregate functions
+SELECT
+	it.IncidentType,
+	COUNT(1) AS NumberOfRows,
+	SUM(ir.NumberOfIncidents) AS TotalNumberOfIncidents,
+	MIN(ir.NumberOfIncidents) AS MinNumberOfIncidents,
+	MAX(ir.NumberOfIncidents) AS MaxNumberOfIncidents,
+	MIN(ir.IncidentDate) As MinIncidentDate,
+	MAX(ir.IncidentDate) AS MaxIncidentDate
+FROM dbo.IncidentRollup ir
+	INNER JOIN dbo.IncidentType it
+		ON ir.IncidentTypeID = it.IncidentTypeID
+WHERE
+	ir.IncidentDate BETWEEN '2019-08-01' AND '2019-10-31'
+GROUP BY
+	it.IncidentType;
+
+
+
+
+				--Calculating distinct counts
+/*
+The COUNT() function has a variant which can be quite useful: COUNT(DISTINCT). This distinct count function allows us to calculate the number of unique elements 
+in a data set, so COUNT(DISTINCT x.Y) will get the unique number of values for column Y on the table aliased as x.
+
+In this example, we will continue to look at incident rollup data in the dbo.IncidentRollup table. Management would like to know how many unique incident types we 
+have in our three-month data set as well as the number of days with incidents. They already know the total number of incidents because you gave them that information 
+in the last exercise.
+*/
+/*
+Return the count of distinct incident type IDs as NumberOfIncidentTypes
+Return the count of distinct incident dates as NumberOfDaysWithIncidents
+Fill in the appropriate function call and input column to determine number of unique incident types and number of days with incidents in our rollup table.
+*/
+
+-- Fill in the functions and columns
+SELECT
+	COUNT(distinct ir.IncidentTypeID) AS NumberOfIncidentTypes,
+	COUNT(distinct ir.IncidentDate) AS NumberOfDaysWithIncidents
+FROM dbo.IncidentRollup ir
+WHERE
+ir.IncidentDate BETWEEN '2019-08-01' AND '2019-10-31';
+
+
+
+
+				--Calculating filtered aggregates
+/*
+If we want to count the number of occurrences of an event given some filter criteria, we can take advantage of aggregate functions like SUM(), MIN(), and MAX(),
+as well as CASE expressions. For example, SUM(CASE WHEN ir.IncidentTypeID = 1 THEN 1 ELSE 0 END) will return the count of incidents associated with incident type 1. 
+If you include one SUM() statement for each incident type, you have pivoted the data set by incident type ID.
+
+In this scenario, management would like us to tell them, by incident type, how many "big-incident" days we have had versus "small-incident" days. Management defines 
+a big-incident day as having more than 5 occurrences of the same incident type on the same day, and a small-incident day has between 1 and 5.
+*/
+/*
+Fill in a CASE expression which lets us use the SUM() function to calculate the number of big-incident and small-incident days.
+In the CASE expression, you should return 1 if the appropriate filter criterion is met and 0 otherwise.
+Be sure to specify the alias when referencing a column, like ir.IncidentDate or it.IncidentType!
+*/
+
+SELECT
+	it.IncidentType,
+    -- Fill in the appropriate expression
+	SUM(CASE WHEN ir.NumberOfIncidents > 5 THEN 1 ELSE 0 END) AS NumberOfBigIncidentDays,
+    -- Number of incidents will always be at least 1, so
+    -- no need to check the minimum value, just that it's
+    -- less than or equal to 5
+    SUM(CASE WHEN ir.NumberOfIncidents <= 5 THEN 1 ELSE 0 END) AS NumberOfSmallIncidentDays
+FROM dbo.IncidentRollup ir
+	INNER JOIN dbo.IncidentType it
+		ON ir.IncidentTypeID = it.IncidentTypeID
+WHERE
+	ir.IncidentDate BETWEEN '2019-08-01' AND '2019-10-31'
+GROUP BY
+it.IncidentType;
+
+
+
+
+
+					--3.2 Statistical aggregate functions
+					--Working with statistical aggregate functions
+/*
+SQL Server offers several aggregate functions for statistical purpose. The AVG() function generates the mean of a sample. STDEV() and STDEVP() give us the standard 
+deviation of a sample and of a population, respectively. VAR() and VARP() give us the variance of a sample and a population, respectively. These are in addition to the
+aggregate functions we learned about in the previous exercise, including SUM(), COUNT(), MIN(), and MAX().
+
+In this exercise, we will look once more at incident rollup and incident type data, this time for quarter 2 of calendar year 2020. We would like to get an idea of how
+much spread there is in incident occurrence--that is, if we see a consistent number of incidents on a daily basis or if we see wider swings.
+*/
+
+--Fill in the missing aggregate functions. For standard deviation and variance, use the sample functions rather than population functions.
+
+SELECT
+	it.IncidentType,
+	AVG(ir.NumberOfIncidents) AS MeanNumberOfIncidents,
+	AVG(CAST(ir.NumberOfIncidents AS DECIMAL(4,2))) AS MeanNumberOfIncidents,
+	STDEV(ir.NumberOfIncidents) AS NumberOfIncidentsStandardDeviation,
+	VAR(ir.NumberOfIncidents) AS NumberOfIncidentsVariance,
+	COUNT(1) AS NumberOfRows
+FROM dbo.IncidentRollup ir
+	INNER JOIN dbo.IncidentType it
+		ON ir.IncidentTypeID = it.IncidentTypeID
+	INNER JOIN dbo.Calendar c
+		ON ir.IncidentDate = c.Date
+WHERE c.CalendarQuarter = 2 AND c.CalendarYear = 2020
+GROUP BY it.IncidentType;
+
+
+
+
+					--Calculating median in SQL Server
+/*
+There is no MEDIAN() function in SQL Server. The closest we have is PERCENTILE_CONT(), which finds the value at the nth percentile across a data set.
+
+We would like to figure out how far the median differs from the mean by incident type in our incident rollup set. To do so, we can compare the AVG() function from the
+prior exercise to PERCENTILE_CONT(). These are window functions, which we will cover in more detail in chapter 4. For now, know that PERCENTILE_CONT() takes a 
+parameter, the percentile (a decimal ranging from from 0. to 1.). The percentile must be within an ordered group inside the WITHIN GROUP clause and OVER a certain 
+range if you need to partition the data. In the WITHIN GROUP section, we need to order by the column whose 50th percentile we want.
+*/
+
+--Fill in the missing value for PERCENTILE_CONT().
+--Inside the WITHIN GROUP() clause, order by number of incidents descending.
+--In the OVER() clause, partition by IncidentType (the actual text value, not the ID).
+
+SELECT DISTINCT
+	it.IncidentType,
+	AVG(CAST(ir.NumberOfIncidents AS DECIMAL(4,2)))
+	    OVER(PARTITION BY it.IncidentType) AS MeanNumberOfIncidents,
+    --- Fill in the missing value
+	PERCENTILE_CONT(0.5)
+    	-- Inside our group, order by number of incidents DESC
+    	WITHIN GROUP (ORDER BY ir.NumberOfIncidents DESC)
+        -- Do this for each IncidentType value
+        OVER (PARTITION BY it.IncidentType) AS MedianNumberOfIncidents,
+	COUNT(1) OVER (PARTITION BY it.IncidentType) AS NumberOfRows
+FROM dbo.IncidentRollup ir
+	INNER JOIN dbo.IncidentType it
+		ON ir.IncidentTypeID = it.IncidentTypeID
+	INNER JOIN dbo.Calendar c
+		ON ir.IncidentDate = c.Date
+WHERE
+	c.CalendarQuarter = 2
+	AND c.CalendarYear = 2020;
+	
+	
+	
+	
+					--3.2Downsampling and upsampling data
+					--Downsample to a daily grain
+/*
+Rolling up data to a higher grain is a common analytical task. We may have a set of data with specific time stamps and a need to observe aggregated results. 
+In SQL Server, there are several techniques available depending upon your desired grain.
+
+For these exercises, we will look at a fictional day spa. Spa management sent out coupons to potential new customers for the period June 16th through 20th of 2020 
+and would like to see if this campaign spurred on new visits.
+
+In this exercise, we will look at one of the simplest downsampling techniques: converting a DATETIME2 or DATETIME data type to a data type with just a date and 
+no time component: the DATE type.
+*/
+
+--Downsample customer visit start times to the daily grain and aggregate results.
+--Fill in the GROUP BY clause with any non-aggregated values in the SELECT clause (but without aliases like AS Day).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
