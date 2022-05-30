@@ -1157,7 +1157,23 @@ For each violation_code and issuing_agency pair, include the number of records c
 Restrict the results to the agencies of interest based on their single-character code (P, S, K, V).
 */
 
-
+SELECT 
+	-- Include the violation code in results
+	violation_code, 
+    -- Include the issuing agency in results
+    issuing_agency, 
+    -- Number of records with violation code/issuing agency
+    COUNT(*) 
+FROM 
+	parking_violation 
+WHERE 
+	-- Restrict the results to the agencies of interest
+	issuing_agency IN ('P', 'S', 'K', 'V') 
+GROUP BY 
+	-- Define GROUP BY columns to ensure correct pair count
+	violation_code, issuing_agency
+ORDER BY 
+	violation_code, issuing_agency;
 
 
 					
@@ -1177,6 +1193,22 @@ Define the Parks column as the number of records for each violation_code with an
 Define the Transportation column as the number of records for each violation_code with an issuing_agency value of V.
 */
 
+SELECT 
+	violation_code, 
+    -- Define the "Police" column
+	COUNT(issuing_agency) FILTER (WHERE issuing_agency = 'P') AS "Police",
+    -- Define the "Sanitation" column
+	COUNT(issuing_agency) FILTER (WHERE issuing_agency = 'S') AS "Sanitation",
+    -- Define the "Parks" column
+	COUNT(issuing_agency) FILTER (WHERE issuing_agency = 'K') AS "Parks",
+    -- Define the "Transportation" column
+	COUNT(issuing_agency) FILTER (WHERE issuing_agency = 'V') AS "Transportation"
+FROM 
+	parking_violation 
+GROUP BY 
+	violation_code
+ORDER BY 
+	violation_code
 
 
 
@@ -1193,13 +1225,42 @@ that can be used like a TABLE once created. You will use this VIEW in a subquery
 Use REGEXP_SPLIT_TO_TABLE() to split community_board into multiple rows using a comma (',') followed by a space character (' ') as the 2-character delimiter.
 Restrict the category values to 'Film', 'Television', and 'Documentary'. */
 
+CREATE OR REPLACE TEMP VIEW cb_categories AS 
+SELECT
+	-- Split community board values
+	REGEXP_SPLIT_TO_TABLE(community_board, ', ') AS community_board,
+    category
+FROM
+	film_permit
+WHERE 
+    -- Restrict the categories in results
+    category IN ('Film', 'Television', 'Documentary');
+
+-- View cb_categories
+SELECT * FROM cb_categories;
+
 
 
 /*2
-
+Convert community_board values to INTEGER so that community_board values are listed in ascending order.
+Define the Film, Television, and Documentary pivot table columns as the number of permits of each type for each community board.
 */
 
-
+SELECT
+	-- Convert community_board data type
+	community_board::INT AS community_board,
+    -- Define pivot table columns
+	COUNT(category) FILTER(where category = 'Film') AS "Film",
+    COUNT(category) FILTER(where category = 'Television') AS "Television",
+	COUNT(category) FILTER(where category = 'Documentary') AS "Documentary"
+FROM
+	cb_categories
+GROUP BY 
+	community_board
+ORDER BY 
+	community_board;
+	
+	
 					
 
 
