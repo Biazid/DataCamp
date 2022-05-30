@@ -285,7 +285,7 @@ You decide to quantify how many records are missing and perform an analysis for 
 
 How many parking_violation records have a NULL value for vehicle_body_type? Write and execute a SELECT query that computes this number.
 
-Ans:
+Ans:179
 */
 					
 					--Using a fill-in value
@@ -303,7 +303,13 @@ In this exercise, you will replace NULL vehicle_body_type values with the string
 
 --Use COALESCE() to replace any vehicle_body_type that is NULL with the string value Unknown in the parking_violation table.
 
+UPDATE
+  parking_violation
+SET
+  -- Replace NULL vehicle_body_type values with `Unknown`
+  vehicle_body_type = COALESCE(vehicle_body_type, 'Unknown');
 
+SELECT COUNT(*) FROM parking_violation WHERE vehicle_body_type = 'Unknown';
   
   
   					--Analyzing incomplete records
@@ -322,9 +328,21 @@ Group the results by issuing_agency.
 Order the results by num_missing in descending order.
 */
 
-
+SELECT
+  -- Define the SELECT list: issuing_agency and num_missing
+  issuing_agency,
+  COUNT(*) AS num_missing
+FROM
+  parking_violation
+WHERE
+  -- Restrict the results to NULL vehicle_body_type values
+  vehicle_body_type is null
+  -- Group results by issuing_agency
+  GROUP BY issuing_agency
+  -- Order results by num_missing in descending order
+  ORDER BY num_missing DESC;
   
-  					
+  					--2.2 Handling duplicated data
 					--Duplicate parking violations
 /*
 There have been a number of complaints indicating that some New York residents have been receiving multiple parking tickets for a single violation. 
@@ -338,7 +356,57 @@ street_name, indicating that multiple tickets were issued for the same violation
 --Subtract 1 from the value returned by ROW_NUMBER() to define the duplicate column.
   
   
-  
+  SELECT
+  	summons_number,
+    -- Use ROW_NUMBER() to define duplicate window
+  	ROW_NUMBER() OVER(
+        PARTITION BY 
+            plate_id, 
+          	issue_date, 
+          	violation_time, 
+          	house_number, 
+          	street_name
+    -- Modify ROW_NUMBER() value to define duplicate column
+      ) - 1 AS duplicate, 
+    plate_id, 
+    issue_date, 
+    violation_time, 
+    house_number, 
+    street_name
+FROM 
+	parking_violation;
+	
+	
+	
+--2 Using the previous query's results, SELECT all records that have a duplicate value that is 1 or greater.
+
+SELECT 
+	-- Include all columns 
+	*
+FROM (
+	SELECT
+  		summons_number,
+  		ROW_NUMBER() OVER(
+        	PARTITION BY 
+            	plate_id, 
+          		issue_date, 
+          		violation_time, 
+          		house_number, 
+          		street_name
+      	) - 1 AS duplicate, 
+      	plate_id, 
+      	issue_date, 
+      	violation_time, 
+      	house_number, 
+      	street_name 
+	FROM 
+		parking_violation
+) sub
+WHERE
+	-- Only return records where duplicate is 1 or more
+	duplicate > 0;
+	
+	
   
   
   					--Resolving impartial duplicates
@@ -356,7 +424,19 @@ Group the results by summons_number.
 Restrict the results to records having a summons_number count that is greater than 1.
 */
 
+SELECT 
+	-- Include SELECT list columns
+	summons_number, 
+    MIN(fee) AS fee
+FROM 
+	parking_violation 
+GROUP BY summons_number 
+HAVING 
+	-- Restrict to summons numbers with count greater than 1
+	COUNT(*) > 1;
 
+					
+					--2.3 Detecting invalid values
 
 					--Detecting invalid values with regular expressions
 /*
@@ -369,17 +449,40 @@ This pattern would match strings including xxxx as well as x and xx.
 */
 --1 Write a query returning records with a registration_state that does not match two consecutive uppercase letters.
 
-
-
+SELECT
+  summons_number,
+  plate_id,
+  registration_state
+FROM
+  parking_violation
+WHERE
+  -- Define the pattern to use for matching
+  registration_state NOT SIMILAR TO  '[A-Z][A-Z]';
 
 --2 Write a query that returns records containing a plate_type that does not match three consecutive uppercase letters.
 
-
+SELECT
+  summons_number,
+  plate_id,
+  plate_type
+FROM
+  parking_violation
+WHERE
+  -- Define the pattern to use for matching
+  plate_type NOT SIMILAR TO '[A-Z]{3}';
 
 
 --3 Write a query returning records with a vehicle_make not including an uppercase letter, a forward slash (/), or a space (\s).
 
-
+SELECT
+  summons_number,
+  plate_id,
+  vehicle_make
+FROM
+  parking_violation
+WHERE
+  -- Define the pattern to use for matching
+  vehicle_make NOT SIMILAR TO  '[A-Z/\s]+';
 
 
 
@@ -398,8 +501,19 @@ Write a query that returns the summons_number, plate_id, and vehicle_year for re
 range 1970-2021. */
 
 
+SELECT
+  -- Define the columns to return from the query
+  summons_number,
+  plate_id,
+  vehicle_year
+FROM
+  parking_violation
+WHERE
+  -- Define the range constraint for invalid vehicle years
+  vehicle_year NOT BETWEEN 1970 AND 2021;
+  
 
-
+				--2.4 Detecting inconsistent data
 				--Identifying invalid parking violations
 /*
 The parking_violation table has three columns populated by related time values. The from_hours_in_effect column indicates the start time when parking restrictions are 
@@ -415,13 +529,33 @@ violation_time.
 --outside of the restricted range.
 
 
-
+SELECT 
+  -- Specify return columns
+  summons_number, 
+  violation_time, 
+  from_hours_in_effect, 
+  to_hours_in_effect
+FROM 
+  parking_violation 
+WHERE 
+  -- Condition on values outside of the restricted range
+  violation_time NOT BETWEEN from_hours_in_effect AND to_hours_in_effect;
 
 
 
 --2 
 
-
+SELECT 
+  summons_number, 
+  violation_time, 
+  from_hours_in_effect, 
+  to_hours_in_effect 
+FROM 
+  parking_violation 
+WHERE 
+  -- Exclude results with overnight restrictions 
+  from_hours_in_effect < to_hours_in_effect AND 
+  violation_time NOT BETWEEN from_hours_in_effect AND to_hours_in_effect;
 
 
   	
@@ -440,8 +574,20 @@ Add a condition to the SELECT query that ensures the returned records contain a 
 Add a condition that ensures the violation_time is less than the from_hours_in_effect.
 Add a condition that ensures the violation_time is greater than the to_hours_in_effect. */
 
-
-
+SELECT
+  summons_number,
+  violation_time,
+  from_hours_in_effect,
+  to_hours_in_effect
+FROM
+  parking_violation
+WHERE
+  -- Ensure from hours greater than to hours
+  from_hours_in_effect > to_hours_in_effect AND
+  -- Ensure violation_time less than from hours
+  violation_time < from_hours_in_effect AND
+  -- Ensure violation_time greater than to hours
+  violation_time > to_hours_in_effect;
 
 
 
@@ -460,20 +606,41 @@ column values. This will be done utilizing five sub-queries to specify which of 
 In the lesson on handling missing data, you learned how to categorize missing data. Before writing any code, can you identify what type of missing data this example 
 represents?
 
-Ans:
+Ans: Missing completely at random
 */
 
 
 /* 2
-
+Define 1 subquery (of the 5) that will be used to select zip_codes from the nyc_zip_codes table that are in the borough of Manhattan.
 */
 
+SELECT zip_code  FROM nyc_zip_codes WHERE borough = 'Manhattan';
 
+--3 Complete the CASE statement sub-queries so that the borough column is populated by the correct borough name when the zip_code is matched.
+--Use NULL to indicate that the zip_code value is not associated to any borough for later investigation.
+
+SELECT 
+	event_id,
+	CASE 
+      WHEN zip_code IN (SELECT zip_code FROM nyc_zip_codes WHERE borough = 'Manhattan') THEN 'Manhattan' 
+      -- Match Brooklyn zip codes
+      WHEN zip_code IN (SELECT zip_code FROM nyc_zip_codes WHERE borough = 'Brooklyn') THEN 'Brooklyn'
+      -- Match Bronx zip codes
+      WHEN zip_code IN (SELECT zip_code FROM nyc_zip_codes WHERE borough = 'Bronx') THEN 'Bronx'
+      -- Match Queens zip codes
+      WHEN zip_code IN (SELECT zip_code FROM nyc_zip_codes WHERE borough = 'Queens') THEN 'Queens'
+      -- Match Staten Island zip codes
+      WHEN zip_code IN (SELECT zip_code FROM nyc_zip_codes WHERE borough = 'Staten Island') THEN 'Staten Island'
+      -- Use default for non-matching zip_code
+      ELSE NULL 
+    END as borough
+FROM
+	film_permit
 
 
 
 								--Chapter3 : Converting Data
-								
+					--3.1 Data type conversions		
 					--Type conversion with a CASE clause
 /*
 One of the parking_violation attributes included for each record is the vehicle's location with respect to the street address of the violation. An 'F' value in the 
@@ -488,7 +655,18 @@ Include one case condition that sets the value of is_violation_in_front to true 
 Include another case condition that sets the value of is_violation_in_front to false when the violation_in_front_of_or_opposite value is equal to 'O' for the record.
 */
 	
-	
+SELECT
+  CASE WHEN
+          -- Use true when column value is 'F'
+          violation_in_front_of_or_opposite = 'F' THEN true
+       WHEN
+          -- Use false when column value is 'O'
+          violation_in_front_of_or_opposite = 'O' THEN false
+       ELSE
+          NULL
+  END AS is_violation_in_front
+FROM
+  parking_violation;	
 	
 	
 	
@@ -506,11 +684,15 @@ In this exercise, you will calculate the size of the range of summons_number val
 Define the range_size for summons_number as the difference between the maximum summons_number and the minimum of the summons_number using the summons_number column 
 after converting to the BIGINT type. */
 
+SELECT
+  -- Define the range_size from the max and min summons number
+  max(summons_number::bigint) - min(summons_number::bigint) AS range_size
+FROM
+  parking_violation;
 
 
 
-
-
+					--3.1 Date parsing and formatting
 					--Cleaning invalid dates
 /*
 The date_first_observed column in the parking_violation dataset represents the date when the parking violation was first observed by the individual recording the 
@@ -522,7 +704,20 @@ the field can be represented as a proper date.
 */
 --1 Replace '0' values in the date_first_observed using the NULLIF() function.
 
+SELECT
+  -- Replace '0' with NULL
+  NULLIF(date_first_observed, '0') AS date_first_observed
+FROM
+  parking_violation;
+  
+  
+--2 Convert the TEXT values in the date_first_observed column (with NULL in place of '0') into DATE values.
 
+SELECT
+  -- Convert date_first_observed into DATE
+  DATE(NULLIF(date_first_observed, '0')) AS date_first_observed
+FROM
+  parking_violation;
 
 
 
@@ -537,15 +732,36 @@ In this exercise, you will use DATE() to convert vehicle_expiration_date and iss
 
 --1 Convert the TEXT columns issue_date and date_first_observed to DATE types.
 
+SELECT
+  summons_number,
+  -- Convert issue_date to a DATE
+  DATE(issue_date) AS issue_date,
+  -- Convert date_first_observed to a DATE
+  DATE(date_first_observed) AS date_first_observed
+FROM
+  parking_violation;
+
+
+--2  Use the TO_CHAR() function to display the issue_date and date_first_observed DATE columns in the YYYYMMDD format.
+
+SELECT
+  summons_number,
+  -- Display issue_date using the YYYYMMDD format
+  TO_CHAR(issue_date, 'YYYYMMDD') AS issue_date,
+  -- Display date_first_observed using the YYYYMMDD format
+  TO_CHAR(date_first_observed, 'YYYYMMDD') AS date_first_observed
+FROM (
+  SELECT
+    summons_number,
+    DATE(issue_date) AS issue_date,
+    DATE(date_first_observed) AS date_first_observed
+  FROM
+    parking_violation
+) sub
 
 
 
---2 
-
-
-
-
-
+					--3.3 Timestamp parsing and formatting
 					--Extracting hours from a time value
 /*
 Your team has been tasked with generating a summary report to better understand the hour of the day when most parking violations are occurring. 
@@ -564,11 +780,38 @@ and meridian indicator (AM or PM). ::TIME converts the resulting timestamp value
 Exclude records with a NULL-valued violation_time. */
 
 
---2 
+SELECT
+  -- Convert violation_time to a TIMESTAMP
+  TO_TIMESTAMP(violation_time, 'HH12MIPM')::TIME AS violation_time
+FROM
+  parking_violation
+WHERE
+  -- Exclude NULL violation_time
+  violation_time IS NOT NULL;
+
+
+--2 Use the EXTRACT() function to complete the query such that the first column of the resulting records is populated by the hour of the violation_time.
+
+SELECT
+  -- Populate column with violation_time hours
+  EXTRACT('hour' FROM violation_time) AS hour,
+  COUNT(*)
+FROM (
+    SELECT
+      TO_TIMESTAMP(violation_time, 'HH12MIPM')::TIME as violation_time
+    FROM
+      parking_violation
+    WHERE
+      violation_time IS NOT NULL
+) sub
+GROUP BY
+  hour
+ORDER BY
+  hour
 
 
 
-
+					
 					--A parking violation report by day of the month
 /*
 Hearing anecdotal evidence that parking tickets are more likely to be given out at the end of the month compared to during the month, you have been tasked with 
@@ -583,13 +826,33 @@ the day of the month required to produce the distribution of violations by month
 
 --1 Use one of the techniques introduced in this chapter to convert a string representing a date into a PostgreSQL DATE to convert issue_date into a DATE value.
 
+SELECT
+  -- Convert issue_date to a DATE value
+  DATE(issue_date) AS issue_date
+FROM
+  parking_violation;
 
 
+--2 Extract the day from each issue_date returned by the subquery to create a column named issue_day.
+--Include a second column providing the count for every day in which a violation occurred.
 
 
---2 
-
-
+SELECT
+  -- Create issue_day from the day value of issue_date
+  Extract ('day' from issue_date) AS issue_day,
+  -- Include the count of violations for each day
+  COUNT(*)
+FROM (
+  SELECT
+    -- Convert issue_date to a `DATE` value
+    DATE(issue_date) AS issue_date
+  FROM
+    parking_violation
+) sub
+GROUP BY
+  issue_day
+ORDER BY
+  issue_day;
 
 
 
@@ -606,6 +869,9 @@ than 1 hour before to_hours_in_effect.
 /* 1
 Convert violation_time and to_hours_in_effect to TIMESTAMP values using TO_TIMESTAMP() and the appropriate format string. ::TIME converts the value to a TIME.
 Exclude locations having both a from_hours_in_effect value of 1200AM and a to_hours_in_effect value of 1159PM. */
+
+
+
 
 /* 2
 
