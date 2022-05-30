@@ -699,22 +699,118 @@ SELECT
 	TRY_CONVERT(DATETIME2(3), @BadDate) AS BadDate;
 	
 	
+
+
+--2 With the prior TRY_CONVERT() solution in mind, use TRY_CAST() to see how they compare.
+
+DECLARE
+	@GoodDateINTL NVARCHAR(30) = '2019-03-01 18:23:27.920',
+	@GoodDateDE NVARCHAR(30) = '13.4.2019',
+	@GoodDateUS NVARCHAR(30) = '4/13/2019',
+	@BadDate NVARCHAR(30) = N'SOME BAD DATE';
+
+/*-- The prior solution using TRY_CONVERT
+SELECT
+	TRY_CONVERT(DATETIME2(3), @GoodDateINTL) AS GoodDateINTL,
+	TRY_CONVERT(DATE, @GoodDateDE) AS GoodDateDE,
+	TRY_CONVERT(DATE, @GoodDateUS) AS GoodDateUS,
+	TRY_CONVERT(DATETIME2(3), @BadDate) AS BadDate;
+*/
+SELECT
+	-- Fill in the correct data type based on our input
+	TRY_CAST(@GoodDateINTL AS DATETIME2(3)) AS GoodDateINTL,
+    -- Be sure to match these data types with the
+    -- TRY_CONVERT() examples above!
+	TRY_CAST(@GoodDateDE AS DATE) AS GoodDateDE,
+	TRY_CAST(@GoodDateUS AS DATE) AS GoodDateUS,
+	TRY_CAST(@BadDate AS DATETIME2(3)) AS BadDate;
+	
+	
+	
+--3 One of our good dates returns NULL. Use TRY_PARSE() and specify de-de for the German date and en-us for the US date.
+
+DECLARE
+	@GoodDateINTL NVARCHAR(30) = '2019-03-01 18:23:27.920',
+	@GoodDateDE NVARCHAR(30) = '13.4.2019',
+	@GoodDateUS NVARCHAR(30) = '4/13/2019',
+	@BadDate NVARCHAR(30) = N'SOME BAD DATE';
+/*
+-- The prior solution using TRY_CAST
+SELECT
+	TRY_CAST(@GoodDateINTL AS DATETIME2(3)) AS GoodDateINTL,
+	TRY_CAST(@GoodDateDE AS DATE) AS GoodDateDE,
+	TRY_CAST(@GoodDateUS AS DATE) AS GoodDateUS,
+	TRY_CAST(@BadDate AS DATETIME2(3)) AS BadDate; */
+SELECT
+	TRY_PARSE(@GoodDateINTL AS DATETIME2(3)) AS GoodDateINTL,
+    -- Fill in the correct region based on our input
+    -- Be sure to match these data types with the
+    -- TRY_CAST() examples above!
+	TRY_PARSE(@GoodDateDE AS DATE USING 'de-de') AS GoodDateDE,
+	TRY_PARSE(@GoodDateUS AS DATE USING 'en-us') AS GoodDateUS,
+    -- TRY_PARSE can't fix completely invalid dates
+	TRY_PARSE(@BadDate AS DATETIME2(3) USING 'sk-sk') AS BadDate;
+	
+	
+	
+					
+					--Convert imported data to dates with time zones
+/*
+Now that we have seen the three type-safe conversion functions, we can begin to apply them against real data sets. 
+In this scenario, we will parse data from the dbo.ImportedTime table. 
+We used a different application to load data from this table and looked at it in a prior exercise. This time, we will retrieve data for all rows, 
+not just the ones the importing application marked as valid.
+*/
+/*
+Fill in the missing TRY_XXX() function name inside the EventDates common table expression.
+Convert the EventDateOffset event dates to 'UTC'. Call this output EventDateUTC.
+Convert the EventDateOffset event dates to 'US Eastern Standard Time' using AT TIME ZONE. Call this output EventDateUSEast.
+*/
+
+
+WITH EventDates AS
+(
+    SELECT
+        -- Fill in the missing try-conversion function
+        TRY_CONVERT(DATETIME2(3), it.EventDate) AT TIME ZONE it.TimeZone AS EventDateOffset,
+        it.TimeZone
+    FROM dbo.ImportedTime it
+        INNER JOIN sys.time_zone_info tzi
+			ON it.TimeZone = tzi.name
+)
+SELECT
+    -- Fill in the approppriate event date to convert
+	CONVERT(NVARCHAR(50), ed.EventDateOffset) AS EventDateOffsetString,
+	CONVERT(DATETIME2(0), ed.EventDateOffset) AS EventDateLocal,
+	ed.TimeZone,
+    -- Convert from a DATETIMEOFFSET to DATETIME at UTC
+	CAST(ed.EventDateOffset AT TIME ZONE 'UTC' AS DATETIME2(0)) AS EventDateUTC,
+    -- Convert from a DATETIMEOFFSET to DATETIME with time zone
+	CAST(ed.EventDateOffset AT TIME ZONE 'US Eastern Standard Time'  AS DATETIME2(0)) AS EventDateUSEast
+FROM EventDates ed;
+
 	
 	
 	
 	
+					--Test type-safe conversion function performance
+					
+/*
+In the last two exercises, we looked at the TRY_CAST(), TRY_CONVERT(), and TRY_PARSE() functions. These functions do not all perform equally well. 
+In this exercise, you will run a performance test against all of the dates in our calendar table.
+
+To make it easier, we have pre-loaded dates in the dbo.Calendar table into a temp table called DateText, where there is a single NVARCHAR(50) column called DateText.
+
+For the first three steps, the instructions will be the same: fill in missing values to complete the relevant function call. 
+After doing that, observe the amount of time each operation takes and keep the results in mind. You will then summarize your results in step 4.
+*/
+
+
 	
-	
-	
-	
-	
-	
-	
-	
-	
---2 Fill in the correct conversion function based on its parameter signature.
+--1 Fill in the correct conversion function based on its parameter signature.
 --Note the amount of time returned in the DATEDIFF() call.
 --Do not use @StartTimeCast or @EndTimeCast in your answer; these are for calculating execution time.
+
 
 -- Try out how fast the TRY_CAST() function is
 -- by try-casting each DateText value to DATE
@@ -726,9 +822,13 @@ DECLARE @EndTimeCast DATETIME2(7) = SYSUTCDATETIME();
 SELECT
     DATEDIFF(MILLISECOND, @StartTimeCast, @EndTimeCast) AS ExecutionTimeCast;
     
- --Fill in the correct conversion function based on its parameter signature.
+    
+    
+    
+--2 Fill in the correct conversion function based on its parameter signature.
 --Note the amount of time returned in the DATEDIFF() call.
 --Do not use @StartTimeCast or @EndTimeCast in your answer; these are for calculating execution time.
+
 -- Try out how fast the TRY_CONVERT() function is
 -- by try-converting each DateText value to DATE
 DECLARE @StartTimeConvert DATETIME2(7) = SYSUTCDATETIME();
@@ -742,9 +842,15 @@ SELECT
     DATEDIFF(MILLISECOND, @StartTimeConvert, @EndTimeConvert) AS ExecutionTimeConvert;
 --Ans: 8
 
---  		Fill in the correct conversion function based on its parameter signature.
+
+
+
+
+--3 Fill in the correct conversion function based on its parameter signature.
 --Note the amount of time returned in the DATEDIFF() call.
 --Do not use @StartTimeCast or @EndTimeCast in your answer; these are for calculating execution time.
+
+
 
 -- Try out how fast the TRY_PARSE() function is
 -- by try-parsing each DateText value to DATE
@@ -757,6 +863,20 @@ DECLARE @EndTimeParse DATETIME2(7) = SYSUTCDATETIME();
 SELECT
     DATEDIFF(MILLISECOND, @StartTimeParse, @EndTimeParse) AS ExecutionTimeParse;
 -- Ans: 646    
+
+
     
---	    Based on what you have learned so far, how would you compare the performance of TRY_PARSE() versus TRY_CAST() and TRY_CONVERT()?
+--4      Based on what you have learned so far, how would you compare the performance of TRY_PARSE() versus TRY_CAST() and TRY_CONVERT()?
 --	Ans:TRY_CAST() and TRY_CONVERT() are both faster than TRY_PARSE().
+
+
+
+
+
+
+							--Chapter3: Aggregating Time Series Data
+							--3.1 Basic aggregate functions
+							
+/*							
+							
+
