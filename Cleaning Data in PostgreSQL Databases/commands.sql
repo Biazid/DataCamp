@@ -870,17 +870,54 @@ than 1 hour before to_hours_in_effect.
 Convert violation_time and to_hours_in_effect to TIMESTAMP values using TO_TIMESTAMP() and the appropriate format string. ::TIME converts the value to a TIME.
 Exclude locations having both a from_hours_in_effect value of 1200AM and a to_hours_in_effect value of 1159PM. */
 
-
+SELECT
+  summons_number,
+  -- Convert violation_time to a TIMESTAMP
+  TO_TIMESTAMP(violation_time, 'HH12MIPM')::TIME as violation_time,
+  -- Convert to_hours_in_effect to a TIMESTAMP
+  TO_TIMESTAMP(to_hours_in_effect, 'HH12MIPM')::TIME as to_hours_in_effect
+FROM
+  parking_violation
+WHERE
+  -- Exclude all day parking restrictions
+  NOT (from_hours_in_effect = '1200AM' AND to_hours_in_effect = '1159PM');
 
 
 /* 2
+Use the EXTRACT() function to create two columns representing the number of hours and minutes, respectively, between violation_time and to_hours_in_effect */
 
+SELECT
+  summons_number,
+  -- Create column for hours between to_hours_in_effect and violation_time
+  EXTRACT('hour' FROM to_hours_in_effect - violation_time) AS hours,
+  -- Create column for minutes between to_hours_in_effect and violation_time
+  EXTRACT('minute' FROM to_hours_in_effect - violation_time) AS minutes
+FROM (
+  SELECT
+    summons_number,
+    TO_TIMESTAMP(violation_time, 'HH12MIPM')::time as violation_time,
+    TO_TIMESTAMP(to_hours_in_effect, 'HH12MIPM')::time as to_hours_in_effect
+  FROM
+    parking_violation
+  WHERE
+    NOT (from_hours_in_effect = '1200AM' AND to_hours_in_effect = '1159PM')
+) sub
 
-*/
 /* 3
+The previous query results are stored in a table named time_differences which contains the columns hours and minutes. 
+Count the number of violation_time values that are within 0 hours and 59 minutes of the record's to_hours_in_effect value. */
 
-*/
 
+SELECT
+  -- Return the count of records
+  COUNT(*)
+FROM
+  time_differences
+WHERE
+  -- Include records with a hours value of 0
+  hours = 0 AND
+  -- Include records with a minutes value of at most 59
+  minutes <= 59;
 
 
 							--Chapter4: Transforming Data
@@ -897,13 +934,39 @@ corner will be tallied by a SQL query.
 Combine street_name, ' & ' (an ampersand surrounded by two spaces), and intersecting_street to create a column named corner.
 Write the query such that records without an intersecting_street value have NULL column entries. */
 
-
+SELECT
+  -- Combine street_name, ' & ', and intersecting_street
+  street_name || ' & ' || intersecting_street AS corner
+FROM
+  parking_violation;
 
 
 /* 2
-
-
+Use the corner query that you just completed to generate a column with the corner value and a second column with the total number of violations occurring 
+at each corner.
+Exclude corner values that are NULL.
 */
+
+SELECT
+  -- include the corner in results
+  corner,
+  -- include the total number of violations occurring at corner
+  COUNT(*)
+FROM (
+  SELECT
+    -- concatenate street_name, ' & ', and intersecting_street
+    street_name || ' & ' || intersecting_street AS corner
+  FROM
+    parking_violation
+) sub
+WHERE
+  -- exclude corner values that are NULL
+  corner is NOT NULL
+GROUP BY
+  corner
+ORDER BY
+  count DESC
+
 
 						--Creating a TIMESTAMP with concatenation
 /*
@@ -917,13 +980,28 @@ with TIMESTAMP values. This will be accomplished by concatenating issue_date and
 
 --1 Concatenate the issue_date column, a space character (' '), and the violation_time column to create a violation_datetime column in the query results.
 
+SELECT
+  -- Concatenate issue_date and violation_time columns
+  CONCAT(issue_date, ' ', violation_time) AS violation_datetime
+FROM
+  parking_violation;
 
 
+--2 Complete the query so that the violation_datetime strings returned by the subquery are converted into proper TIMESTAMP values using the format string 
+--MM/DD/YYYY HH12MIAM.
 
 
---2 
+SELECT
+  -- Convert violation_time to TIMESTAMP
+  TO_TIMESTAMP(violation_datetime, 'MM/DD/YYYY HH12MIAM') AS violation_datetime
+FROM (
+  SELECT
+    CONCAT(issue_date, ' ', violation_time) AS violation_datetime
+  FROM
+    parking_violation
+) sub;
 
-
+					--4.2 Splitting column data
 					--Extracting time units with SUBSTRING()
 /*
 In a previous exercise, you separated the interval between the violation_time and to_hours_in_effect columns into their constituent hour and minute time units. 
@@ -936,10 +1014,24 @@ the need to convert the string to a TIMESTAMP value to extract the time unit as 
 
 --1 Define the hour column as the substring starting at the 1st position in violation_time and extending 2 characters in length.
 
+SELECT
+  -- Define hour column
+  SUBSTRING(violation_time FROM 1 FOR 2) AS hour
+FROM
+  parking_violation;
+  
+  
+--2 Add a definition for the minute column in the results as the substring starting at the 3rd position in violation_time and extending 2 characters in length.
+
+SELECT
+  SUBSTRING(violation_time FROM 1 FOR 2) AS hour,
+  -- Define minute column
+  SUBSTRING(violation_time FROM 3 FOR 2) AS minute
+FROM
+  parking_violation;
 
 
-
-
+					
 					--Extracting house numbers from a string
 /*
 Addresses for the Queens borough of New York City are unique in that they often include dashes in the house number component of the street address. 
@@ -951,13 +1043,34 @@ In this exercise, you will use STRPOS(), SUBSTRING(), and LENGTH() to extract th
 --1 Write a query that returns the position in the house_number column where the first dash character (-) location is found or 0 if the house_number does not 
 --contain a dash (-).
 
+SELECT
+  -- Find the position of first '-'
+  STRPOS(house_number, '-') AS dash_position
+FROM
+  parking_violation;
 
 
---2
+--2 Complete the query such that new_house_number contains just the Queens house number. The house number begins 1 position beyond the position 
+--containing a dash (-) and extends to the end of the original house_number value.
+
+
+SELECT
+  house_number,
+  -- Extract the substring after '-'
+  SUBSTRING(
+    -- Specify the column of the original house number
+    house_number
+    -- Calculate the position that is 1 beyond '-'
+    FROM STRPOS(house_number, '-') + 1
+    -- Calculate number characters from dash to end of string
+    FOR LENGTH(house_number) - STRPOS(house_number, '-')
+  ) AS new_house_number
+FROM
+  parking_violation;
 
 
 						
-						--4.3
+					--4.3 Splitting data with delimiters
 					--Splitting house numbers with a delimiter
 /*
 In the previous exercise, you used STRPOS(), LENGTH(), and SUBSTRING() to separate the actual house number for Queens addresses from the value representing a cross 
@@ -969,10 +1082,15 @@ In this exercise, you will extract the house number for Queens addresses using t
 Write a query that returns the part of the house_number value after the dash character ('-') (if a dash character is present in the column value) as the 
 column new_house_number. */
 
+SELECT
+  -- Split house_number using '-' as the delimiter
+  SPLIT_PART(house_number, '-', 2) AS new_house_number
+FROM
+  parking_violation
+WHERE
+  violation_county = 'Q';
 
-
-
-					
+			
 					
 					--Mapping parking restrictions
 /*
@@ -988,19 +1106,41 @@ In this exercise, you will use REGEXP_SPLIT_TO_TABLE() and ROW_NUMBER() to assoc
 Use REGEXP_SPLIT_TO_TABLE() with the empty-string ('') as a delimiter to split days_parking_in_effect into a single availability symbol (B or Y).
 Include street_address and violation_county as columns so that each row contains these associated values. */
 
-
-
-
+SELECT
+  -- Specify SELECT list columns
+  street_address,
+  violation_county,
+  REGEXP_SPLIT_TO_TABLE(days_parking_in_effect, '') AS daily_parking_restriction
+FROM
+  parking_restriction;
 
 
 /*2
-
+Use the ROW_NUMBER() function to enumerate each combination of street_address and violation_county values with a number from 1 (Monday) to 7 (Sunday) 
+corresponding to the daily_parking_restriction values.
 */
 
 
+SELECT
+  -- Label daily parking restrictions for locations by day
+  ROW_NUMBER() OVER(
+    PARTITION BY
+        street_address, violation_county
+    ORDER BY
+        street_address, violation_county
+  ) AS day_number,
+  *
+FROM (
+  SELECT
+    street_address,
+    violation_county,
+    REGEXP_SPLIT_TO_TABLE(days_parking_in_effect, '') AS daily_parking_restriction
+  FROM
+    parking_restriction
+) sub;
 
 
-						--4.4
+						--4.4 Creating pivot tables
 						--Selecting data for a pivot table
 /*
 In an effort to get a better understanding of which agencies are responsible for different types of parking violations, you have been tasked with creating a report 
@@ -1016,6 +1156,7 @@ Include violation_code and issuing_agency in the SELECT list for the query.
 For each violation_code and issuing_agency pair, include the number of records containing the pair in the SELECT list.
 Restrict the results to the agencies of interest based on their single-character code (P, S, K, V).
 */
+
 
 
 
