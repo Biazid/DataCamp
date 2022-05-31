@@ -1608,11 +1608,110 @@ ORDER BY
 	
 	
 					--4.4 Finding maximum levels of overlap
-					--
+					--Analyze client data for potential fraud/*
+					
+/*
+In this final set of exercises, we will analyze day spa data to look for potential fraud. Our company gives each customer one pass for personal use and a single guest
+pass. We have check-in and check-out data for each client and guest passes tie back to the base customer ID. This means that there might be overlap when a client and 
+guest both check in together. We want to see if there are at least three overlapping entries for a single client, as that would be a violation of our business rule.
+
+The key to thinking about overlapping entries is to unpivot our data and think about the stream of entries and exits. We will do that first.
+*/
+/*
+Split out start events and end events.
+
+Fill in the customer's visit start date (dsv.CustomerVisitStart) as TimeUTC in the "entrances" part of the query.
+Fill in the window function that we alias as StartStopPoints to give us the stream of check-ins for each customer, ordered by their visit start date.
+Fill in the customer's visit end date (dsv.CustomerVisitEnd) as TimeUTC in the "departures" part of the query. */
+
+
+-- This section focuses on entrances:  CustomerVisitStart
+SELECT
+	dsv.CustomerID,
+	dsv.CustomerVisitStart AS TimeUTC,
+	1 AS EntryCount,
+    -- We want to know each customer's entrance stream
+    -- Get a unique, ascending row number
+	ROW_NUMBER() OVER (
+      -- Break this out by customer ID
+      PARTITION BY dsv.CustomerID
+      -- Ordered by the customer visit start date
+      ORDER BY dsv.CustomerVisitStart
+    ) AS StartOrdinal
+FROM dbo.DaySpaVisit dsv
+UNION ALL
+-- This section focuses on departures:  CustomerVisitEnd
+SELECT
+	dsv.CustomerID,
+	dsv.CustomerVisitEnd AS TimeUTC,
+	-1 AS EntryCount,
+	NULL AS StartOrdinal
+FROM dbo.DaySpaVisit dsv
 
 
 
 
+
+						--Build a stream of events
+/*
+In the prior exercise, we broke out day spa data into a stream of entrances and exits. Unpivoting the data allows us to move to the next step, 
+which is to order the entire stream.
+
+The results from the prior exercise are now in a temporary table called #StartStopPoints. The columns in this table are CustomerID, TimeUTC, EntryCount, and 
+StartOrdinal. These are the only columns you will need to use in this exercise. TimeUTC represents the event time, EntryCount indicates the net change for the event 
+(+1 or -1), and StartOrdinal appears for entrance events and gives the order of entry.
+*/
+/*
+Fill out the appropriate window function (ROW_NUMBER()) to create a stream of check-ins and check-outs in chronological order.
+Partition by the customer ID to calculate a result per user.
+Order by the event time and solve ties by using the start ordinal value. */
+
+SELECT s.*,
+    -- Build a stream of all check-in and check-out events
+	ROW_NUMBER() OVER (
+      -- Break this out by customer ID
+      PARTITION BY s.CustomerID
+      -- Order by event time and then the start ordinal
+      -- value (in case of exact time matches)
+      ORDER BY s.TimeUTC, s.StartOrdinal
+    ) AS StartOrEndOrdinal
+FROM #StartStopPoints s;
+
+
+
+					
+					--Complete the fraud analysis
+/*
+So far, we have broken out day spa data into a stream of entrances and exits and ordered this stream chronologically. This stream contains two critical fields, 
+StartOrdinal and StartOrEndOrdinal. StartOrdinal is the chronological ordering of all entrances. StartOrEndOrdinal contains all entrances and exits in order. 
+Armed with these two pieces of information, we can find the maximum number of concurrent visits.
+
+The results from the prior exercise are now in a temporary table called #StartStopOrder.
+*/
+
+--1 Fill out the HAVING clause to determine cases with more than 2 concurrent visitors.
+--Fill out the ORDER BY clause to show management the worst offenders: those with the highest values for MaxConcurrentCustomerVisits.
+
+
+SELECT
+	s.CustomerID,
+	MAX(2 * s.StartOrdinal - s.StartOrEndOrdinal) AS MaxConcurrentCustomerVisits
+FROM #StartStopOrder s
+WHERE s.EntryCount = 1
+GROUP BY s.CustomerID
+-- The difference between 2 * start ordinal and the start/end
+-- ordinal represents the number of concurrent visits
+HAVING MAX(2 * s.StartOrdinal - s.StartOrEndOrdinal) > 2
+-- Sort by the largest number of max concurrent customer visits
+ORDER BY MaxConcurrentCustomerVisits DESC;
+
+
+--2 Based on your analysis in the prior exercise, what is the extent of customer misuse of the guest pass policy?
+--Ans: Some customers violated the policy: the maximum concurrency for any customer was 4.
+
+
+
+				--
 
 
 
