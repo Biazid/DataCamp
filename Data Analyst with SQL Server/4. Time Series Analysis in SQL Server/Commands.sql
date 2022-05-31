@@ -1478,19 +1478,137 @@ ORDER BY
 	
 	
 	
+						--4.3 LEAD() LAG()
+						--Seeing prior and future periods
+/*
+The LAG() and LEAD() window functions give us the ability to look backward or forward in time, respectively. This gives us the ability to compare 
+period-over-period data in a single, easy query.
+
+In this exercise, we want to compare the number of security incidents by day for incident types 1 and 2 during July of 2019, specifically the period starting on 
+July 2nd and ending July 31st.
+*/
+--Fill in the window function to return the prior day's number of incidents, partitioned by incident type ID and ordered by the incident date.
+--Fill in the window function to return the next day's number of incidents, partitioned by incident type ID and ordered by the incident date.
+
+
+SELECT
+	ir.IncidentDate,
+	ir.IncidentTypeID,
+    -- Get the prior day's number of incidents
+	LAG(ir.NumberOfIncidents, 1) OVER (
+      	-- Partition by incident type ID
+		PARTITION BY ir.IncidentTypeID
+      	-- Order by incident date
+		ORDER BY ir.IncidentDate
+	) AS PriorDayIncidents,
+	ir.NumberOfIncidents AS CurrentDayIncidents,
+    -- Get the next day's number of incidents
+	LEAD(ir.NumberOfIncidents, 1) OVER (
+      	-- Partition by incident type ID
+		PARTITION BY ir.IncidentTypeID
+      	-- Order by incident date
+		ORDER BY ir.IncidentDate
+	) AS NextDayIncidents
+FROM dbo.IncidentRollup ir
+WHERE
+	ir.IncidentDate >= '2019-07-02'
+	AND ir.IncidentDate <= '2019-07-31'
+	AND ir.IncidentTypeID IN (1, 2)
+ORDER BY
+	ir.IncidentTypeID,
+	ir.IncidentDate;
 	
-						--
+	
+	
+	
+						--Seeing the prior three periods
 
 
+/*
+The LAG() and LEAD() window functions give us the ability to look backward or forward in time, respectively. This gives us the ability to compare period-over-period 
+data in a single, easy query. Each call to LAG() or LEAD() returns either a NULL or a single row. If you want to see multiple periods back, you can include multiple 
+calls to LAG() or LEAD().
+
+In this exercise, we want to compare the number of security incidents by day for incident types 1 and 2 during July of 2019, specifically the period starting on 
+July 2nd and ending July 31st. Management would like to see a rolling four-day window by incident type to see if there are any significant trends, starting two days 
+before and looking one day ahead.
+*/
+--Fill in the SQL to return the number of incidents from two periods ago.
+--Fill in the SQL to return the number of incidents from the prior period.
+--Fill in the SQL to return the number of incidents from the next period.
+
+SELECT
+	ir.IncidentDate,
+	ir.IncidentTypeID,
+    -- Fill in two periods ago
+	LAG(ir.NumberOfIncidents, 2) OVER (
+		PARTITION BY ir.IncidentTypeID
+		ORDER BY ir.IncidentDate
+	) AS Trailing2Day,
+    -- Fill in one period ago
+	LAG(ir.NumberOfIncidents, 1) OVER (
+		PARTITION BY ir.IncidentTypeID
+		ORDER BY ir.IncidentDate
+	) AS Trailing1Day,
+	ir.NumberOfIncidents AS CurrentDayIncidents,
+    -- Fill in next period
+	LEAD(ir.NumberOfIncidents, 1) OVER (
+		PARTITION BY ir.IncidentTypeID
+		ORDER BY ir.IncidentDate
+	) AS NextDay
+FROM dbo.IncidentRollup ir
+WHERE
+	ir.IncidentDate >= '2019-07-01'
+	AND ir.IncidentDate <= '2019-07-31'
+	AND ir.IncidentTypeID IN (1, 2)
+ORDER BY
+	ir.IncidentTypeID,
+	ir.IncidentDate;
+	
+	
+	
+					
+						--Calculating days elapsed between incidents
+/*
+Something you might have noticed in the prior two exercises is that we don't always have incidents on every day of the week, so calling LAG() and LEAD() the 
+"prior day" is a little misleading; it's really the "prior period." Someone in management noticed this as well and, at the end of July, wanted to know the number of 
+days between incidents. To do this, we will calculate two values: the number of days since the prior incident and the number of days until the next incident.
+
+Recall that DATEDIFF() gives the difference between two dates. We can combine this with LAG() and LEAD() to get our results.
+*/
+/*
+Calculate the days since the last incident using a combination of DATEDIFF() and LAG() or LEAD().
+Calculate the days until the next incident using a combination of DATEDIFF() and LAG() or LEAD().
+NOTE: you will not need to use the NumberOfIncidents column in this exercise.        */
 
 
-
-
-
-
-
-
-
+SELECT
+	ir.IncidentDate,
+	ir.IncidentTypeID,
+    -- Fill in the days since last incident
+	DATEDIFF(DAY, LAG(ir.IncidentDate, 1) OVER (
+		PARTITION BY ir.IncidentTypeID
+		ORDER BY ir.IncidentDate
+	), ir.IncidentDate) AS DaysSinceLastIncident,
+    -- Fill in the days until next incident
+	DATEDIFF(DAY, ir.IncidentDate, LEAD(ir.IncidentDate, 1) OVER (
+		PARTITION BY ir.IncidentTypeID
+		ORDER BY ir.IncidentDate
+	)) AS DaysUntilNextIncident
+FROM dbo.IncidentRollup ir
+WHERE
+	ir.IncidentDate >= '2019-07-02'
+	AND ir.IncidentDate <= '2019-07-31'
+	AND ir.IncidentTypeID IN (1, 2)
+ORDER BY
+	ir.IncidentTypeID,
+	ir.IncidentDate;
+	
+	
+	
+	
+					--4.4 Finding maximum levels of overlap
+					--
 
 
 
